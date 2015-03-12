@@ -28,6 +28,14 @@
    that are ready to run but not actually running. */
 static struct list ready_list;
 
+
+
+/* WOO MADE SLEEP LIST*/
+static struct list sleep_list;
+
+
+
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
