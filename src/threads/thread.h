@@ -88,7 +88,7 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-    int64_t remain_tick                 /* WOO MADE show remaining time to sleep */
+    int64_t remain_tick;                /* WOO MADE show remaining time to sleep */
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
 
@@ -133,4 +133,7 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+/*WOO MADE FUNC*/
+void push2sleep(struct list_elem elem);
+void update_sleep(void);
 #endif /* threads/thread.h */

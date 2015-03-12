@@ -563,3 +563,32 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+
+/*WOO MADE FUNC*/
+void 
+push2sleep(struct list_elem elem)
+{
+  list_push_back (&sleep_list, &elem);
+}
+
+void
+update_sleep()
+{
+	 if(!list_empty(&sleep_list))
+   {
+         struct list_elem *find;
+         for(find = list_begin(&sleep_list);
+	     find != list_end(&sleep_list); 
+	     find = list_next(find))
+         {
+                 struct thread * temp = list_entry(find, struct thread, elem);
+                 if(--temp->remain_tick==0)
+                 {
+                         struct list_elem *pop = list_pop_front (&sleep_list);
+                         list_push_back(&ready_list, &pop);
+                 }
+         }
+   }
+
+}

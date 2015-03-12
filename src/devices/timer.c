@@ -101,7 +101,7 @@ timer_sleep (int64_t ticks)
 
   ASSERT (intr_get_level () == INTR_ON);
     
-  list_push_back (&sleep_list, &curr->elem); 
+  push2sleep(curr->elem);
   curr->status = THREAD_BLOCKED;
   curr->remain_tick = ticks-start;
 }
@@ -139,7 +139,7 @@ static void
 timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
-  sleep_list
+  update_sleep();
   thread_tick ();
 }
 
