@@ -16,14 +16,6 @@
 #include "userprog/process.h"
 #endif
 
-/* ================================================================ */
-/* ==============            Added by TEAM04           ============ */
-/* ================================================================ */
-#define PART_1_ALARM_CLOCK
-/* ---------------------------------------------------------------- */
-/* ---------------------------------------------------------------- */
-/* ================================================================ */
-
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -36,9 +28,7 @@
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
-#ifdef PART_1_ALARM_CLOCK
 static struct list sleep_list;
-#endif
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -478,8 +468,35 @@ next_thread_to_run (void)
 {
   if (list_empty (&ready_list))
     return idle_thread;
-  else
-    return list_entry (list_pop_front (&ready_list), struct thread, elem);
+  else{
+    struct list_elem *find;
+    struct thread * higher_priority_thread;
+    int max = -1;
+
+    /* 1. Looking for the highest priority thread */
+    for(find = list_begin(&ready_list);
+        find != list_end(&ready_list);
+        find = list_next(find))
+    {
+      struct thread * temp = list_entry(find, struct thread, elem);
+      if(temp->priority > max){
+	max = temp->priority;
+	higher_priority_thread = temp;
+      }
+    }  
+
+    /* 2. Pop the thread from the ready list */
+    enum intr_level old_level;
+    old_level = intr_disable ();
+    list_remove(&higher_priority_thread->elem);
+    intr_set_level (old_level);
+
+    /* 3. Return the thread */
+    return higher_priority_thread;  
+  }
+
+
+
 }
 
 /* Completes a thread switch by activating the new thread's page
