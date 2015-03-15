@@ -16,6 +16,14 @@
 #include "userprog/process.h"
 #endif
 
+/* ================================================================ */
+/* ==============            Added by TEAM04           ============ */
+/* ================================================================ */
+#define PART_1_ALARM_CLOCK
+/* ---------------------------------------------------------------- */
+/* ---------------------------------------------------------------- */
+/* ================================================================ */
+
 /* Random value for struct thread's `magic' member.
    Used to detect stack overflow.  See the big comment at the top
    of thread.h for details. */
@@ -28,6 +36,9 @@
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
 static struct list ready_list;
+#ifdef PART_1_ALARM_CLOCK
+static struct list sleep_list;
+#endif
 
 /* Idle thread. */
 static struct thread *idle_thread;
@@ -92,6 +103,7 @@ thread_init (void)
 
   lock_init (&tid_lock);
   list_init (&ready_list);
+  list_init (&sleep_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread ();
@@ -556,3 +568,35 @@ allocate_tid (void)
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
+
+void push2sleep(int64_t ticks){
+  struct thread *cur = thread_current ();
+  enum intr_level old_level;
+  
+  cur->remain_ticks = ticks;
+
+  old_level = intr_disable ();
+  list_push_back (&sleep_list, &cur->elem);
+  thread_block();
+  intr_set_level (old_level);
+}
+
+void updatesleep(void){
+  if(!list_empty(&sleep_list))
+  {
+         struct list_elem *find;
+         for(find = list_begin(&sleep_list);
+	     find != list_end(&sleep_list); 
+	     find = list_next(find))
+         {
+                 struct thread * temp = list_entry(find, struct thread, elem);
+                 if(--temp->remain_ticks<=0)
+                 {
+                         find = list_remove (find);
+			 find = list_prev(find);
+			 thread_unblock(temp);
+                 }
+         }
+   }
+
+}
