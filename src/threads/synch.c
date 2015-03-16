@@ -116,7 +116,6 @@ sema_up (struct semaphore *sema)
 
   old_level = intr_disable ();
   if (!list_empty (&sema->waiters)){
-#if 1
 		struct list_elem *find;
 		struct thread * higher_priority_thread = list_entry(list_begin(&sema->waiters), struct thread, elem);
 
@@ -135,11 +134,6 @@ sema_up (struct semaphore *sema)
 		if(higher_priority_thread->priority > thread_current()->priority){
 			flag = true;
 		}
-
-#else
-    thread_unblock (list_entry (list_pop_front (&sema->waiters),
-                                struct thread, elem));
-#endif
   }
 
   sema->value++;
@@ -339,6 +333,7 @@ cond_wait (struct condition *cond, struct lock *lock)
    An interrupt handler cannot acquire a lock, so it does not
    make sense to try to signal a condition variable within an
    interrupt handler. */
+
 void
 cond_signal (struct condition *cond, struct lock *lock UNUSED) 
 {
@@ -347,9 +342,40 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (!intr_context ());
   ASSERT (lock_held_by_current_thread (lock));
 
-  if (!list_empty (&cond->waiters))
-    sema_up (&list_entry (list_pop_front (&cond->waiters),
-                          struct semaphore_elem, elem)->semaphore);
+  if (!list_empty (&cond->waiters)){
+	struct list_elem *find, *find2, *higher_priority_elem = list_begin(&cond->waiters);
+    struct semaphore_elem *higher_priority_sema_elem = list_entry(higher_priority_elem,
+																	struct semaphore_elem, elem);
+    struct semaphore *higher_priority_sema = &higher_priority_sema_elem->semaphore;
+	struct thread * higher_priority_thread = list_entry(list_begin(&higher_priority_sema->waiters),
+																	struct thread, elem);
+
+	/* Looking for the higher priority thread from the list 'cond->waiters' */
+	for(find = list_begin(&cond->waiters);
+		find != list_end(&cond->waiters);
+		find = list_next(find))
+	{
+		higher_priority_sema_elem = list_entry(find, struct semaphore_elem, elem);
+		higher_priority_sema = &higher_priority_sema_elem->semaphore;
+
+		for(find2 = list_begin(&higher_priority_sema->waiters);
+			find2 != list_end(&higher_priority_sema->waiters);
+			find2 = list_next(find2))
+		{
+			struct thread * temp = list_entry(find2, struct thread, elem);	  
+
+			if(temp->priority > higher_priority_thread->priority){
+				higher_priority_thread = temp;
+				higher_priority_elem = find;
+			}
+		}
+	}
+
+	/* Remove the elem of semaphore_elem from the list 'cond->waiters' */
+	list_remove(higher_priority_elem);
+
+    sema_up (&list_entry (higher_priority_elem, struct semaphore_elem, elem)->semaphore);
+  }
 }
 
 /* Wakes up all threads, if any, waiting on COND (protected by
