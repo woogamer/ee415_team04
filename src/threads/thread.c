@@ -201,6 +201,9 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
+  if(t->priority > thread_current()->priority){
+    thread_yield();
+  }
 
   return tid;
 }
@@ -241,6 +244,7 @@ thread_unblock (struct thread *t)
   list_push_back (&ready_list, &t->elem);
   t->status = THREAD_READY;
   intr_set_level (old_level);
+
 }
 
 /* Returns the name of the running thread. */
@@ -318,6 +322,30 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+
+  /* When the changed priority of the running thread, the higher priority thread in ready list should be running 
+   * if the priority of the running thread is lower than the priority of one of threads in ready list.    */
+  if(!list_empty(&ready_list))
+  {
+    struct list_elem *find;
+    struct thread * higher_priority_thread = list_entry(list_begin(&ready_list), struct thread, elem);
+
+    /* Looking for the highest priority thread in the ready list */
+    for(find = list_begin(&ready_list);
+        find != list_end(&ready_list); 
+        find = list_next(find))
+    {
+      struct thread * temp = list_entry(find, struct thread, elem);
+      if(temp->priority > higher_priority_thread->priority){
+        higher_priority_thread = temp;
+      }
+    }
+
+    /* If the highest priority thread in the ready list has higher priority than the running thread, 
+     * the running thread should yield CPU to the thread immediately. */
+    if(higher_priority_thread->priority > thread_current()->priority)
+      thread_yield();
+  }
 }
 
 /* Returns the current thread's priority. */
@@ -406,7 +434,7 @@ kernel_thread (thread_func *function, void *aux)
   function (aux);       /* Execute the thread function. */
   thread_exit ();       /* If function() returns, kill the thread. */
 }
-
+
 /* Returns the running thread. */
 struct thread *
 running_thread (void) 
@@ -470,7 +498,7 @@ next_thread_to_run (void)
     return idle_thread;
   else{
     struct list_elem *find;
-    struct thread * higher_priority_thread;
+    struct thread * higher_priority_thread = list_entry(list_begin(&ready_list), struct thread, elem);
     int max = -1;
 
     /* 1. Looking for the highest priority thread */
@@ -581,7 +609,7 @@ allocate_tid (void)
 
   return tid;
 }
-
+
 /* Offset of `stack' member within `struct thread'.
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
@@ -609,9 +637,12 @@ void updatesleep(void){
                  struct thread * temp = list_entry(find, struct thread, elem);
                  if(--temp->remain_ticks<=0)
                  {
+			 //printf("Some thread has been moved to ready_list.\n");
                          find = list_remove (find);
 			 find = list_prev(find);
 			 thread_unblock(temp);
+			 if(temp->priority > thread_current()->priority)
+		           intr_yield_on_return ();
                  }
          }
    }

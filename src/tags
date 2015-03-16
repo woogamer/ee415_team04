@@ -390,6 +390,7 @@ pte_create_kernel	threads/pte.h	/^static inline uint32_t pte_create_kernel (void
 pte_create_user	threads/pte.h	/^static inline uint32_t pte_create_user (void *page/
 pte_get_page	threads/pte.h	/^static inline void *pte_get_page (uint32_t pte) {$/
 ptov	threads/vaddr.h	/^ptov (uintptr_t paddr)$/
+push2sleep	threads/thread.c	/^void push2sleep(int64_t ticks){$/
 putbuf	lib/kernel/console.c	/^putbuf (const char *buffer, size_t n) $/
 putc_poll	devices/serial.c	/^putc_poll (uint8_t byte) $/
 putchar	lib/kernel/console.c	/^putchar (int c) $/
@@ -516,6 +517,7 @@ tss_update	userprog/tss.c	/^tss_update (void) $/
 turn_off_least_1bit	lib/kernel/hash.c	/^turn_off_least_1bit (size_t x) $/
 udiv64	lib/arithmetic.c	/^udiv64 (uint64_t n, uint64_t d)$/
 umod64	lib/arithmetic.c	/^umod64 (uint64_t n, uint64_t d)$/
+updatesleep	threads/thread.c	/^void updatesleep(void){$/
 usage	threads/init.c	/^usage (void)$/
 va_arg	lib/stdarg.h	/^#define va_arg(LIST, TYPE)	__builtin_va_arg (LIST,/
 va_copy	lib/stdarg.h	/^#define va_copy(DST, SRC)	__builtin_va_copy (DST, /

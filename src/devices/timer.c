@@ -102,8 +102,9 @@ timer_sleep (int64_t ticks)
   //while (timer_elapsed (start) < ticks) 
   if( ticks <=0 ) 
     thread_yield ();
-
-  push2sleep(ticks);
+  else{
+    push2sleep(ticks);
+  }
 }
 
 /* Suspends execution for approximately MS milliseconds. */
