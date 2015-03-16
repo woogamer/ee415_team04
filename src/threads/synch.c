@@ -124,14 +124,14 @@ sema_up (struct semaphore *sema)
 			find = list_next(find))
 		{
 			struct thread * temp = list_entry(find, struct thread, elem);	  
-			if(temp->priority > higher_priority_thread->priority){
+			if(get_priority(temp) > get_priority(higher_priority_thread)){
 				higher_priority_thread = temp;
 			}
 		}
 		list_remove(&higher_priority_thread->elem);
 
 		thread_unblock(higher_priority_thread);
-		if(higher_priority_thread->priority > thread_current()->priority){
+		if(get_priority(higher_priority_thread) > thread_get_priority()){
 			flag = true;
 		}
   }
@@ -220,12 +220,19 @@ lock_acquire (struct lock *lock)
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
 
+  /* Keep elem2 of the thread which tries to acquire the lock */
   if(lock->holder != NULL){
-	if(lock->holder->priority < thread_current()->priority){
-		lock->holder->priority_original = lock->holder->priority;
-		lock->holder->priority = thread_current()->priority;
-	}
+	  /* When the running thread's priority is higher than holder's priority, */
+	  if(thread_get_priority() > get_priority(lock->holder)){
+		enum intr_level old_level;
+		
+		old_level = intr_disable ();
+		/* then keep elem2 of the trier in donate_list of holder.  */
+		list_push_back(&lock->holder->donate_list, &thread_current()->elem2);
+		intr_set_level (old_level);
+	  }
   }
+
   sema_down (&lock->semaphore);
   lock->holder = thread_current ();
 }
@@ -262,12 +269,21 @@ lock_release (struct lock *lock)
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
-  //old_level = intr_disable ();
-  //intr_set_level (old_level);
-  
-  if(lock->holder->priority_original != -1)
-	lock->holder->priority = lock->holder->priority_original;
-  //thread_set_priority(lock->holder->priority_original);
+  if(!list_empty(&lock->holder->donate_list)){
+	/* If waiters exist in the list, */
+	if(!list_empty(&lock->semaphore.waiters)){
+		struct list_elem *find;
+
+		/* then remove all of them from the donate_list of holder. */
+		for(find = list_begin(&lock->semaphore.waiters);
+			find != list_end(&lock->semaphore.waiters);
+			find = list_next(find))
+		{
+			list_remove(&list_entry(find, struct thread, elem)->elem2);
+		}
+	}
+  }
+
   lock->holder = NULL;
   sema_up (&lock->semaphore);
 }

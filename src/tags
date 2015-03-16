@@ -163,6 +163,7 @@ fsutil_rm	filesys/fsutil.c	/^fsutil_rm (char **argv) $/
 gdt	threads/loader.S	/^gdt:$/
 gdt_init	userprog/gdt.c	/^gdt_init (void)$/
 gdtdesc	threads/loader.S	/^gdtdesc:$/
+get_priority	threads/thread.c	/^get_priority(struct thread *target){$/
 halt	lib/user/syscall.h	/^void halt (void) NO_RETURN;$/
 halt	lib/user/syscall.c	/^halt (void) $/
 hash_apply	lib/kernel/hash.c	/^hash_apply (struct hash *h, hash_action_func *acti/

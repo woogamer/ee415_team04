@@ -88,10 +88,12 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-    int priority_original;                       /* original Priority. */
 
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
+	struct list_elem elem2;				/* For donate_list */
+	struct list donate_list;			/* List of threads which try to acquire the lock
+										   acquired by this thread */
 
     int64_t remain_ticks;
 #ifdef USERPROG
@@ -140,3 +142,5 @@ int thread_get_load_avg (void);
 
 void push2sleep(int64_t ticks);
 void updatesleep(void);
+
+int get_priority(struct thread *target);

@@ -201,7 +201,7 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-  if(t->priority > thread_current()->priority){
+  if(get_priority(t) > thread_get_priority()){
     thread_yield();
   }
 
@@ -336,23 +336,53 @@ thread_set_priority (int new_priority)
         find = list_next(find))
     {
       struct thread * temp = list_entry(find, struct thread, elem);
-      if(temp->priority > higher_priority_thread->priority){
+      if(get_priority(temp) > get_priority(higher_priority_thread)){
         higher_priority_thread = temp;
       }
     }
 
     /* If the highest priority thread in the ready list has higher priority than the running thread, 
      * the running thread should yield CPU to the thread immediately. */
-    if(higher_priority_thread->priority > thread_current()->priority)
+    if(get_priority(higher_priority_thread) > thread_get_priority())
       thread_yield();
   }
+}
+
+/* A function for tracking the highest priority recursively among the waiters in donate_list */
+int 
+get_priority(struct thread *target){
+	int max = target->priority;
+
+	/* If donate_list is empty, */
+	if(list_empty(&target->donate_list)){
+		/* then it returns its own priority. */
+		return max;
+	}else{
+		/* If not, it tracks all elem2 from the donate_list recursively. */
+		struct list_elem *find;
+		for(find = list_begin(&target->donate_list);
+			find != list_end(&target->donate_list);
+			find = list_next(find))
+		{
+			struct thread *temp = list_entry(find ,struct thread, elem2);
+			int tt = get_priority(temp);
+			/* If the corresponding thread has higher priority */
+			if( max < tt ){
+				/* then it changes the max value with the priority.*/
+				max = tt;
+			}
+		}
+
+		/* It returns the maximum value. */
+		return max;
+	}
 }
 
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+	return get_priority(thread_current());  
 }
 
 /* Sets the current thread's nice value to NICE. */
@@ -470,7 +500,7 @@ init_thread (struct thread *t, const char *name, int priority)
   strlcpy (t->name, name, sizeof t->name);
   t->stack = (uint8_t *) t + PGSIZE;
   t->priority = priority;
-  t->priority_original = -1;
+  list_init(&t->donate_list); /* Initialize donate_list  */
   t->magic = THREAD_MAGIC;
 }
 
@@ -508,9 +538,10 @@ next_thread_to_run (void)
         find = list_next(find))
     {
       struct thread * temp = list_entry(find, struct thread, elem);
-      if(temp->priority > max){
-	max = temp->priority;
-	higher_priority_thread = temp;
+	  int tt = get_priority(temp);
+      if(tt > max){
+		max = tt;
+		higher_priority_thread = temp;
       }
     }  
 
@@ -642,7 +673,7 @@ void updatesleep(void){
 				find = list_remove (find);
 				find = list_prev(find);
 				thread_unblock(temp);
-				if(temp->priority > thread_current()->priority)
+				if(get_priority(temp) > thread_get_priority())
 					intr_yield_on_return ();
 			}
 		}
