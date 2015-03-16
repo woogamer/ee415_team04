@@ -627,24 +627,23 @@ void push2sleep(int64_t ticks){
 }
 
 void updatesleep(void){
-  if(!list_empty(&sleep_list))
-  {
-         struct list_elem *find;
-         for(find = list_begin(&sleep_list);
-	     find != list_end(&sleep_list); 
-	     find = list_next(find))
-         {
-                 struct thread * temp = list_entry(find, struct thread, elem);
-                 if(--temp->remain_ticks<=0)
-                 {
-			 //printf("Some thread has been moved to ready_list.\n");
-                         find = list_remove (find);
-			 find = list_prev(find);
-			 thread_unblock(temp);
-			 if(temp->priority > thread_current()->priority)
-		           intr_yield_on_return ();
-                 }
-         }
-   }
-
+	if(!list_empty(&sleep_list))
+	{
+		struct list_elem *find;
+		for(find = list_begin(&sleep_list);
+			find != list_end(&sleep_list); 
+			find = list_next(find))
+		{
+			struct thread * temp = list_entry(find, struct thread, elem);
+			if(--temp->remain_ticks<=0)
+			{
+				//printf("Some thread has been moved to ready_list.\n");
+				find = list_remove (find);
+				find = list_prev(find);
+				thread_unblock(temp);
+				if(temp->priority > thread_current()->priority)
+					intr_yield_on_return ();
+			}
+		}
+	}
 }

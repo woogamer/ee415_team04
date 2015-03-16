@@ -110,15 +110,44 @@ void
 sema_up (struct semaphore *sema) 
 {
   enum intr_level old_level;
+  int flag = false;
 
   ASSERT (sema != NULL);
 
   old_level = intr_disable ();
-  if (!list_empty (&sema->waiters)) 
+  if (!list_empty (&sema->waiters)){
+#if 1
+		struct list_elem *find;
+		struct thread * higher_priority_thread = list_entry(list_begin(&sema->waiters), struct thread, elem);
+
+		for(find = list_begin(&sema->waiters);
+			find != list_end(&sema->waiters);
+			find = list_next(find))
+		{
+			struct thread * temp = list_entry(find, struct thread, elem);	  
+			if(temp->priority > higher_priority_thread->priority){
+				higher_priority_thread = temp;
+			}
+		}
+		list_remove(&higher_priority_thread->elem);
+
+		thread_unblock(higher_priority_thread);
+		if(higher_priority_thread->priority > thread_current()->priority){
+			flag = true;
+		}
+
+#else
     thread_unblock (list_entry (list_pop_front (&sema->waiters),
                                 struct thread, elem));
+#endif
+  }
+
   sema->value++;
   intr_set_level (old_level);
+
+  if(flag)
+	thread_yield();
+	
 }
 
 static void sema_test_helper (void *sema_);
@@ -318,7 +347,7 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
   ASSERT (!intr_context ());
   ASSERT (lock_held_by_current_thread (lock));
 
-  if (!list_empty (&cond->waiters)) 
+  if (!list_empty (&cond->waiters))
     sema_up (&list_entry (list_pop_front (&cond->waiters),
                           struct semaphore_elem, elem)->semaphore);
 }
