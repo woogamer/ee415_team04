@@ -7,7 +7,7 @@ pass tests/threads/alarm-negative
 pass tests/threads/priority-change
 pass tests/threads/priority-donate-one
 pass tests/threads/priority-donate-multiple
-FAIL tests/threads/priority-donate-multiple2
+pass tests/threads/priority-donate-multiple2
 pass tests/threads/priority-donate-nest
 pass tests/threads/priority-donate-sema
 pass tests/threads/priority-donate-lower
@@ -21,7 +21,7 @@ pass tests/threads/mlfqs-load-60
 pass tests/threads/mlfqs-load-avg
 pass tests/threads/mlfqs-recent-1
 pass tests/threads/mlfqs-fair-2
-FAIL tests/threads/mlfqs-fair-20
+pass tests/threads/mlfqs-fair-20
 pass tests/threads/mlfqs-nice-2
 pass tests/threads/mlfqs-nice-10
 pass tests/threads/mlfqs-block

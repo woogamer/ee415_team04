@@ -1,11 +1,10 @@
-Writing command line to /tmp/3hn3Idgo7b.dsk...
+Writing command line to /tmp/1gwu9gmoXq.dsk...
 warning: can't find squish-pty, so terminal input will fail
 bochs -q
 Kernel command line: -q run priority-preempt
 Pintos booting with 4,096 kB RAM...
 374 pages available in kernel pool.
 373 pages available in user pool.
-TIMER_FREQ=100
 Calibrating timer...  204,600 loops/s.
 Boot complete.
 Executing 'priority-preempt':
@@ -19,8 +18,8 @@ Executing 'priority-preempt':
 (priority-preempt) The high-priority thread should have already completed.
 (priority-preempt) end
 Execution of 'priority-preempt' complete.
-Timer: 87 ticks
-Thread: 0 idle ticks, 90 kernel ticks, 0 user ticks
-Console: 789 characters output
+Timer: 86 ticks
+Thread: 1 idle ticks, 88 kernel ticks, 0 user ticks
+Console: 774 characters output
 Keyboard: 0 keys pressed
 Powering off...

@@ -1,4 +1,5 @@
-TOTAL TESTING SCORE: 93.6%
+TOTAL TESTING SCORE: 100.0%
+ALL TESTED PASSED -- PERFECT SCORE
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -7,10 +8,10 @@ SUMMARY BY TEST SET
 Test Set                                      Pts Max  % Ttl  % Max
 --------------------------------------------- --- --- ------ ------
 tests/threads/Rubric.alarm                     18/ 18  20.0%/ 20.0%
-tests/threads/Rubric.priority                  35/ 38  36.8%/ 40.0%
-tests/threads/Rubric.mlfqs                     34/ 37  36.8%/ 40.0%
+tests/threads/Rubric.priority                  38/ 38  40.0%/ 40.0%
+tests/threads/Rubric.mlfqs                     37/ 37  40.0%/ 40.0%
 --------------------------------------------- --- --- ------ ------
-Total                                                  93.6%/100.0%
+Total                                                 100.0%/100.0%
 
 - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
@@ -39,15 +40,15 @@ Functionality of priority scheduler (tests/threads/Rubric.priority):
 
 	     3/ 3 tests/threads/priority-donate-one
 	     3/ 3 tests/threads/priority-donate-multiple
-	  ** 0/ 3 tests/threads/priority-donate-multiple2
+	     3/ 3 tests/threads/priority-donate-multiple2
 	     3/ 3 tests/threads/priority-donate-nest
 	     5/ 5 tests/threads/priority-donate-chain
 	     3/ 3 tests/threads/priority-donate-sema
 	     3/ 3 tests/threads/priority-donate-lower
 
 	- Section summary.
-	     11/ 12 tests passed
-	     35/ 38 points subtotal
+	     12/ 12 tests passed
+	     38/ 38 points subtotal
 
 Functionality of advanced scheduler (tests/threads/Rubric.mlfqs):
 	     5/ 5 tests/threads/mlfqs-load-1
@@ -57,7 +58,7 @@ Functionality of advanced scheduler (tests/threads/Rubric.mlfqs):
 	     5/ 5 tests/threads/mlfqs-recent-1
 
 	     5/ 5 tests/threads/mlfqs-fair-2
-	  ** 0/ 3 tests/threads/mlfqs-fair-20
+	     3/ 3 tests/threads/mlfqs-fair-20
 
 	     4/ 4 tests/threads/mlfqs-nice-2
 	     2/ 2 tests/threads/mlfqs-nice-10
@@ -65,146 +66,6 @@ Functionality of advanced scheduler (tests/threads/Rubric.mlfqs):
 	     5/ 5 tests/threads/mlfqs-block
 
 	- Section summary.
-	      8/  9 tests passed
-	     34/ 37 points subtotal
+	      9/  9 tests passed
+	     37/ 37 points subtotal
 
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-DETAILS OF tests/threads/priority-donate-multiple2 FAILURE:
-
-Test output failed to match any acceptable form.
-
-Acceptable output:
-  (priority-donate-multiple2) begin
-  (priority-donate-multiple2) Main thread should have priority 34.  Actual priority: 34.
-  (priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-  (priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-  (priority-donate-multiple2) Thread b acquired lock b.
-  (priority-donate-multiple2) Thread b finished.
-  (priority-donate-multiple2) Thread a acquired lock a.
-  (priority-donate-multiple2) Thread a finished.
-  (priority-donate-multiple2) Thread c finished.
-  (priority-donate-multiple2) Threads b, a, c should have just finished, in that order.
-  (priority-donate-multiple2) Main thread should have priority 31.  Actual priority: 31.
-  (priority-donate-multiple2) end
-Differences in `diff -u' format:
-  (priority-donate-multiple2) begin
-  (priority-donate-multiple2) Main thread should have priority 34.  Actual priority: 34.
-  (priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-  (priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-- (priority-donate-multiple2) Thread b acquired lock b.
-- (priority-donate-multiple2) Thread b finished.
-  (priority-donate-multiple2) Thread a acquired lock a.
-  (priority-donate-multiple2) Thread a finished.
-  (priority-donate-multiple2) Thread c finished.
-+ (priority-donate-multiple2) Thread b acquired lock b.
-+ (priority-donate-multiple2) Thread b finished.
-  (priority-donate-multiple2) Threads b, a, c should have just finished, in that order.
-  (priority-donate-multiple2) Main thread should have priority 31.  Actual priority: 31.
-  (priority-donate-multiple2) end
-
-OUTPUT FROM tests/threads/priority-donate-multiple2:
-
-Writing command line to /tmp/BS0dLNaFvJ.dsk...
-warning: can't find squish-pty, so terminal input will fail
-bochs -q
-Kernel command line: -q run priority-donate-multiple2
-Pintos booting with 4,096 kB RAM...
-374 pages available in kernel pool.
-373 pages available in user pool.
-TIMER_FREQ=100
-Calibrating timer...  204,600 loops/s.
-Boot complete.
-Executing 'priority-donate-multiple2':
-(priority-donate-multiple2) begin
-(priority-donate-multiple2) Main thread should have priority 34.  Actual priority: 34.
-(priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-(priority-donate-multiple2) Main thread should have priority 36.  Actual priority: 36.
-(priority-donate-multiple2) Thread a acquired lock a.
-(priority-donate-multiple2) Thread a finished.
-(priority-donate-multiple2) Thread c finished.
-(priority-donate-multiple2) Thread b acquired lock b.
-(priority-donate-multiple2) Thread b finished.
-(priority-donate-multiple2) Threads b, a, c should have just finished, in that order.
-(priority-donate-multiple2) Main thread should have priority 31.  Actual priority: 31.
-(priority-donate-multiple2) end
-Execution of 'priority-donate-multiple2' complete.
-Timer: 139 ticks
-Thread: 0 idle ticks, 142 kernel ticks, 0 user ticks
-Console: 1138 characters output
-Keyboard: 0 keys pressed
-Powering off...
-
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
-
-DETAILS OF tests/threads/mlfqs-fair-20 FAILURE:
-
-Some tick counts were missing or differed from those expected by more than 20.
-thread   actual <-> expected explanation
------- -------- --- -------- ----------------------------------------
-     0      100 <<< 152      Too small, by 32.
-     1      100 <<< 152      Too small, by 32.
-     2       99 <<< 152      Too small, by 33.
-     3       90 <<< 152      Too small, by 42.
-     4      100 <<< 152      Too small, by 32.
-     5       97 <<< 152      Too small, by 35.
-     6       96 <<< 152      Too small, by 36.
-     7       92 <<< 152      Too small, by 40.
-     8       92 <<< 152      Too small, by 40.
-     9       90 <<< 152      Too small, by 42.
-    10       89 <<< 148      Too small, by 39.
-    11       94 <<< 148      Too small, by 34.
-    12       92 <<< 148      Too small, by 36.
-    13       96 <<< 148      Too small, by 32.
-    14       97 <<< 148      Too small, by 31.
-    15       96 <<< 148      Too small, by 32.
-    16       98 <<< 148      Too small, by 30.
-    17       97 <<< 148      Too small, by 31.
-    18       99 <<< 148      Too small, by 29.
-    19      100 <<< 148      Too small, by 28.
-
-OUTPUT FROM tests/threads/mlfqs-fair-20:
-
-Writing command line to /tmp/j54jBnKlTG.dsk...
-warning: can't find squish-pty, so terminal input will fail
-bochs -q
-Kernel command line: -q -mlfqs run mlfqs-fair-20
-Pintos booting with 4,096 kB RAM...
-374 pages available in kernel pool.
-373 pages available in user pool.
-TIMER_FREQ=100
-Calibrating timer...  179,000 loops/s.
-Boot complete.
-Executing 'mlfqs-fair-20':
-(mlfqs-fair-20) begin
-(mlfqs-fair-20) Starting 20 threads...
-(mlfqs-fair-20) Starting threads took 60 ticks.
-(mlfqs-fair-20) Sleeping 40 seconds to let threads run, please wait...
-(mlfqs-fair-20) Thread 0 received 100 ticks.
-(mlfqs-fair-20) Thread 1 received 100 ticks.
-(mlfqs-fair-20) Thread 2 received 99 ticks.
-(mlfqs-fair-20) Thread 3 received 90 ticks.
-(mlfqs-fair-20) Thread 4 received 100 ticks.
-(mlfqs-fair-20) Thread 5 received 97 ticks.
-(mlfqs-fair-20) Thread 6 received 96 ticks.
-(mlfqs-fair-20) Thread 7 received 92 ticks.
-(mlfqs-fair-20) Thread 8 received 92 ticks.
-(mlfqs-fair-20) Thread 9 received 90 ticks.
-(mlfqs-fair-20) Thread 10 received 89 ticks.
-(mlfqs-fair-20) Thread 11 received 94 ticks.
-(mlfqs-fair-20) Thread 12 received 92 ticks.
-(mlfqs-fair-20) Thread 13 received 96 ticks.
-(mlfqs-fair-20) Thread 14 received 97 ticks.
-(mlfqs-fair-20) Thread 15 received 96 ticks.
-(mlfqs-fair-20) Thread 16 received 98 ticks.
-(mlfqs-fair-20) Thread 17 received 97 ticks.
-(mlfqs-fair-20) Thread 18 received 99 ticks.
-(mlfqs-fair-20) Thread 19 received 100 ticks.
-(mlfqs-fair-20) end
-Execution of 'mlfqs-fair-20' complete.
-Timer: 4255 ticks
-Thread: 976 idle ticks, 3283 kernel ticks, 0 user ticks
-Console: 1458 characters output
-Keyboard: 0 keys pressed
-Powering off...
