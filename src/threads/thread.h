@@ -88,14 +88,15 @@ struct thread
     char name[16];                      /* Name (for debugging purposes). */
     uint8_t *stack;                     /* Saved stack pointer. */
     int priority;                       /* Priority. */
-
+    int nice;				/* Niceness*/
+    int recent_cpu;			/* recent_cpu*/
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
-	struct list_elem elem2;				/* For donate_list */
-	struct list donate_list;			/* List of threads which try to acquire the lock
+    struct list_elem elem2;		/* For donate_list */
+    struct list donate_list;		/* List of threads which try to acquire the lock
 										   acquired by this thread */
 
-    int64_t remain_ticks;
+    int64_t wakeup_ticks;		/*when wakeup_ticks equals to timer_tick(), thread wakeup */
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
@@ -137,10 +138,44 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+void push2sleep(int64_t ticks);
+bool wakeup_tick_compare (const struct list_elem *a,
+                          const struct list_elem *b,
+                          void *aux UNUSED);
+
+void updatesleep(int64_t ticks);
+
+int get_priority(struct thread *target);
+void push2mlfq(struct thread *input);
+bool priority_compare (const struct list_elem *a,
+                              const struct list_elem *b,
+                              void *aux UNUSED);
+
+
+struct list_elem * pop_from_mlfq(void);
+int num_ready(void);
+
+void load_update(void);
+void recent_cpu_update();
+void priortiy_update(void);
+void increase_recent_cpu(void);
+//arithmetic operation
+#define ppp 16
+#define qqq 14
+#define fff (1<<qqq)
+
+#define int2fp(n) n*fff
+#define fp2int_zero(x) x/fff
+#define fp2int_round(x) ( (x>0)?((x+fff/2)/fff) : ((x-fff/2))/fff )
+#define addfp(x, y) x+y
+#define subfp(x, y) x-y
+#define addfp_int(x, n) x+n*fff
+#define subfp_int(x, n) x-n*fff
+#define multiply_fp(x, y) ((int64_t)x) * y / fff
+#define multiply_fp_int(x, n) x*n
+#define divide_fp(x, y) ((int64_t) x) * fff / y
+#define divide_fp_int(x, n) x/n
+
 #endif /* threads/thread.h */
 
 
-void push2sleep(int64_t ticks);
-void updatesleep(void);
-
-int get_priority(struct thread *target);

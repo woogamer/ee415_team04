@@ -1,10 +1,10 @@
-Writing command line to /tmp/epeCwuZ8l1.dsk...
+Writing command line to /tmp/bC3uhXJztW.dsk...
 warning: can't find squish-pty, so terminal input will fail
 bochs -q
 Kernel command line: -q -mlfqs run mlfqs-recent-1
 Pintos booting with 4,096 kB RAM...
 374 pages available in kernel pool.
-373 pages available in user pool.
+374 pages available in user pool.
 Calibrating timer...  204,600 loops/s.
 Boot complete.
 Executing 'mlfqs-recent-1':
