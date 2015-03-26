@@ -42,7 +42,6 @@ timer_init (void)
   outb (0x43, 0x34);    /* CW: counter 0, LSB then MSB, mode 2, binary. */
   outb (0x40, count & 0xff);
   outb (0x40, count >> 8);
-
   intr_register_ext (0x20, timer_interrupt, "8254 Timer");
 }
 
@@ -94,16 +93,16 @@ timer_elapsed (int64_t then)
 
 /* Suspends execution for approximately TICKS timer ticks. */
 void
-timer_sleep (int64_t ticks) 
+timer_sleep (int64_t tick) 
 {
-  int64_t start = timer_ticks ();
+ int64_t start = timer_ticks ();
 
   ASSERT (intr_get_level () == INTR_ON);
-  //while (timer_elapsed (start) < ticks) 
+ // while (timer_elapsed (start) < ticks) 
   if( ticks <=0 )
     thread_yield ();
   else{
-    push2sleep(ticks);
+    push2sleep(tick+start);
   }
 }
 
@@ -141,7 +140,24 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  updatesleep();
+  /*for every tick, wakeup threads whose sleep time is up*/
+  updatesleep(ticks);
+  if(thread_mlfqs)
+  {	
+	/*incrase recent_cpu every tick*/
+	increase_recent_cpu();
+	/*update load_avg, recent_cpu every second*/
+ 	if(timer_ticks()%TIMER_FREQ==0)
+  	{	
+		load_update();
+		recent_cpu_update();
+ 	}
+	/*update priority every 4ticks*/	
+ 	if(ticks%4==0)
+	priority_update();
+		
+  }
+  
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

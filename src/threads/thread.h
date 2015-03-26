@@ -93,6 +93,7 @@ struct thread
     /* Shared between thread.c and synch.c. */
     struct list_elem elem;              /* List element. */
     struct list_elem elem2;		/* For donate_list */
+    struct list_elem elem3;		/* For block_list */
     struct list donate_list;		/* List of threads which try to acquire the lock
 										   acquired by this thread */
 
@@ -156,11 +157,11 @@ struct list_elem * pop_from_mlfq(void);
 int num_ready(void);
 
 void load_update(void);
-void recent_cpu_update();
+void recent_cpu_update(void);
 void priortiy_update(void);
 void increase_recent_cpu(void);
 //arithmetic operation
-#define ppp 16
+#define ppp 17
 #define qqq 14
 #define fff (1<<qqq)
 
