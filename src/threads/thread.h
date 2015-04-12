@@ -94,13 +94,19 @@ struct thread
     struct list_elem elem;              /* List element. */
     struct list_elem elem2;		/* For donate_list */
     struct list_elem elem3;		/* For block_list */
-    struct list donate_list;		/* List of threads which try to acquire the lock
-										   acquired by this thread */
-
-    int64_t wakeup_ticks;		/*when wakeup_ticks equals to timer_tick(), thread wakeup */
+    struct list donate_list;		/* List of threads which try to acquire the lock								   acquired by this thread */
+    
+   int64_t wakeup_ticks;		/*when wakeup_ticks equals to timer_tick(), thread wakeup */
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+
+ 
+    struct list_elem child_elem;	/* Fof child_list*/
+    struct list child_list; 		/* List of child threads */
+    struct thread * parent;		/* thread pointer to parent*/
+    struct list fd_list;		/* file discript list*/
+    int fd_num;				/* num of fd*/
 #endif
 
     /* Owned by thread.c. */

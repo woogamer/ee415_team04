@@ -14,6 +14,7 @@
 #include "threads/vaddr.h"
 #ifdef USERPROG
 #include "userprog/process.h"
+#include <string.h>
 #endif
 
 /* Random value for struct thread's `magic' member.
@@ -99,6 +100,7 @@ thread_init (void)
   list_init (&sleep_list);
   list_init (&ready_list);
   list_init (&block_list);
+
   if(thread_mlfqs)
   load=0; 
 
@@ -210,6 +212,12 @@ thread_create (const char *name, int priority,
   /* initialize members*/
   t->nice=thread_current()->nice;
   t->recent_cpu=0;
+  /* fd is started from 2*/
+  t->fd_num=2;
+  /* update child parent information*/
+  if(strcmp(t->name,"main") && strcmp(t->name,"idle"))
+  list_push_back(&thread_current()->child_list, &t->child_elem);
+  t->parent = thread_current();
   /* Add to run queue. */
   thread_unblock (t);
   if(get_priority(t) > thread_get_priority()){
@@ -327,7 +335,7 @@ void
 thread_exit (void) 
 {
   ASSERT (!intr_context ());
-
+ 
 #ifdef USERPROG
   process_exit ();
 #endif
@@ -564,7 +572,7 @@ init_thread (struct thread *t, const char *name, int priority)
   ASSERT (t != NULL);
   ASSERT (PRI_MIN <= priority && priority <= PRI_MAX);
   ASSERT (name != NULL);
-
+ 
   memset (t, 0, sizeof *t);
   t->status = THREAD_BLOCKED;
   strlcpy (t->name, name, sizeof t->name);
@@ -573,6 +581,7 @@ init_thread (struct thread *t, const char *name, int priority)
   if(!thread_mlfqs) 
   t->priority = priority;
   list_init(&t->donate_list); /* Initialize donate_list  */
+  list_init(&t->child_list);
   t->magic = THREAD_MAGIC;
 }
 
@@ -615,35 +624,35 @@ next_thread_to_run (void)
   }
   else
   {
-  if (list_empty (&ready_list))
-    return idle_thread;
-  else{
-    struct list_elem *find;
-    struct thread * higher_priority_thread = list_entry(list_begin(&ready_list), struct thread, elem);
-    int max = -1;
+	  if (list_empty (&ready_list))
+	    return idle_thread;
+	  else{
+	    struct list_elem *find;
+	    struct thread * higher_priority_thread = list_entry(list_begin(&ready_list), struct thread, elem);
+	    int max = -1;
 
-    /* 1. Looking for the highest priority thread */
-    for(find = list_begin(&ready_list);
-        find != list_end(&ready_list);
-        find = list_next(find))
-    {
-      struct thread * temp = list_entry(find, struct thread, elem);
-	  int tt = get_priority(temp);
-      if(tt > max){
-		max = tt;
-		higher_priority_thread = temp;
-      }
-    }  
+	    /* 1. Looking for the highest priority thread */
+	    for(find = list_begin(&ready_list);
+		find != list_end(&ready_list);
+		find = list_next(find))
+	    {
+		struct thread * temp = list_entry(find, struct thread, elem);
+		int tt = get_priority(temp);
+		if(tt > max){
+			max = tt;
+			higher_priority_thread = temp;
+		}
+	    }  
 
-    /* 2. Pop the thread from the ready list */
-    enum intr_level old_level;
-    old_level = intr_disable ();
-    list_remove(&higher_priority_thread->elem);
-    intr_set_level (old_level);
+	    /* 2. Pop the thread from the ready list */
+	    enum intr_level old_level;
+	    old_level = intr_disable ();
+	    list_remove(&higher_priority_thread->elem);
+	    intr_set_level (old_level);
 
-    /* 3. Return the thread */
-    return higher_priority_thread;  
-  }
+	    /* 3. Return the thread */
+	    return higher_priority_thread;  
+	  }
   }
 
     return NULL;

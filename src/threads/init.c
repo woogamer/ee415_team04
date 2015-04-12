@@ -309,6 +309,7 @@ run_actions (char **argv)
         else if (!strcmp (*argv, a->name))
           break;
 
+
       /* Check for required arguments. */
       for (i = 1; i < a->argc; i++)
         if (argv[i] == NULL)

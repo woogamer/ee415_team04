@@ -36,6 +36,8 @@ _start	lib/user/entry.c	/^_start (int argc, char *argv[]) $/
 acquire_console	lib/kernel/console.c	/^acquire_console (void) $/
 active_pd	userprog/pagedir.c	/^active_pd (void) $/
 add_char	lib/user/console.c	/^add_char (char c, void *aux_) $/
+addfp	threads/thread.h	/^#define addfp(x, y) x+y$/
+addfp_int	threads/thread.h	/^#define addfp_int(x, n) x+n*fff$/
 alloc_frame	threads/thread.c	/^alloc_frame (struct thread *t, size_t size) $/
 allocate_tid	threads/thread.c	/^allocate_tid (void) $/
 arena_to_block	threads/malloc.c	/^arena_to_block (struct arena *a, size_t idx) $/
@@ -93,9 +95,9 @@ console_panic	lib/kernel/console.c	/^console_panic (void) $/
 console_print_stats	lib/kernel/console.c	/^console_print_stats (void) $/
 create	lib/user/syscall.c	/^create (const char *file, unsigned initial_size)$/
 debug_backtrace	lib/debug.c	/^debug_backtrace (void) $/
-debug_panic	lib/kernel/debug.c	/^debug_panic (const char *file, int line, const cha/
 debug_panic	lib/user/debug.c	/^debug_panic (const char *file, int line, const cha/
 debug_panic	lib/debug.h	/^void debug_panic (const char *file, int line, cons/
+debug_panic	lib/kernel/debug.c	/^debug_panic (const char *file, int line, const cha/
 dir_add	filesys/directory.c	/^dir_add (struct dir *dir, const char *name, disk_s/
 dir_close	filesys/directory.c	/^dir_close (struct dir *dir) $/
 dir_create	filesys/directory.c	/^dir_create (disk_sector_t sector, size_t entry_cnt/
@@ -112,6 +114,8 @@ disk_print_stats	devices/disk.c	/^disk_print_stats (void) $/
 disk_read	devices/disk.c	/^disk_read (struct disk *d, disk_sector_t sec_no, v/
 disk_size	devices/disk.c	/^disk_size (struct disk *d) $/
 disk_write	devices/disk.c	/^disk_write (struct disk *d, disk_sector_t sec_no, /
+divide_fp	threads/thread.h	/^#define divide_fp(x, y) ((int64_t) x) * fff \/ y$/
+divide_fp_int	threads/thread.h	/^#define divide_fp_int(x, n) x\/n$/
 divl	lib/arithmetic.c	/^divl (uint64_t n, uint32_t d)$/
 do_compare	lib/stdlib.c	/^do_compare (unsigned char *array, size_t a_idx, si/
 do_format	filesys/filesys.c	/^do_format (void)$/
@@ -148,6 +152,8 @@ find_end_of_run	lib/kernel/list.c	/^find_end_of_run (struct list_elem *a, struct
 flush	lib/user/console.c	/^flush (struct vhprintf_aux *aux)$/
 format_integer	lib/stdio.c	/^format_integer (uintmax_t value, bool is_signed, b/
 format_string	lib/stdio.c	/^format_string (const char *string, int length,$/
+fp2int_round	threads/thread.h	/^#define fp2int_round(x) ( (x>0)?((x+fff\/2)\/fff) : /
+fp2int_zero	threads/thread.h	/^#define fp2int_zero(x) x\/fff$/
 free	threads/malloc.c	/^free (void *p) $/
 free_map_allocate	filesys/free-map.c	/^free_map_allocate (size_t cnt, disk_sector_t *sect/
 free_map_close	filesys/free-map.c	/^free_map_close (void) $/
@@ -185,11 +191,12 @@ hash_size	lib/kernel/hash.c	/^hash_size (struct hash *h) $/
 hash_string	lib/kernel/hash.c	/^hash_string (const char *s_) $/
 heapify	lib/stdlib.c	/^heapify (unsigned char *array, size_t i, size_t cn/
 hex_dump	lib/stdio.c	/^hex_dump (uintptr_t ofs, const void *buf_, size_t /
-hprintf	lib/user/stdio.h	/^int hprintf (int, const char *, ...) PRINTF_FORMAT/
 hprintf	lib/user/console.c	/^hprintf (int handle, const char *format, ...) $/
+hprintf	lib/user/stdio.h	/^int hprintf (int, const char *, ...) PRINTF_FORMAT/
 identify_ata_device	devices/disk.c	/^identify_ata_device (struct disk *d) $/
 idle	threads/thread.c	/^idle (void *idle_started_ UNUSED) $/
 inb	threads/io.h	/^inb (uint16_t port)$/
+increase_recent_cpu	threads/thread.c	/^void increase_recent_cpu(void)$/
 init	devices/vga.c	/^init (void)$/
 init_poll	devices/serial.c	/^init_poll (void) $/
 init_pool	threads/palloc.c	/^init_pool (struct pool *p, void *base, size_t page/
@@ -218,6 +225,7 @@ insert_elem	lib/kernel/hash.c	/^insert_elem (struct hash *h, struct list *bucket
 insl	threads/io.h	/^insl (uint16_t port, void *addr, size_t cnt)$/
 install_page	userprog/process.c	/^install_page (void *upage, void *kpage, bool writa/
 insw	threads/io.h	/^insw (uint16_t port, void *addr, size_t cnt)$/
+int2fp	threads/thread.h	/^#define int2fp(n) n*fff$/
 interrupt_handler	devices/disk.c	/^interrupt_handler (struct intr_frame *f) $/
 intq_empty	devices/intq.c	/^intq_empty (const struct intq *q) $/
 intq_full	devices/intq.c	/^intq_full (const struct intq *q) $/
@@ -302,6 +310,7 @@ list_tail	lib/kernel/list.c	/^list_tail (struct list *list) $/
 list_unique	lib/kernel/list.c	/^list_unique (struct list *list, struct list *dupli/
 load	userprog/process.c	/^load (const char *file_name, void (**eip) (void), /
 load_segment	userprog/process.c	/^load_segment (struct file *file, off_t ofs, uint8_/
+load_update	threads/thread.c	/^void load_update(void)$/
 lock_acquire	threads/synch.c	/^lock_acquire (struct lock *lock)$/
 lock_held_by_current_thread	threads/synch.c	/^lock_held_by_current_thread (const struct lock *lo/
 lock_init	threads/synch.c	/^lock_init (struct lock *lock)$/
@@ -330,11 +339,14 @@ memset	lib/string.c	/^memset (void *dst_, int value, size_t size) $/
 mkdir	lib/user/syscall.c	/^mkdir (const char *dir)$/
 mmap	lib/user/syscall.c	/^mmap (int fd, void *addr)$/
 move_cursor	devices/vga.c	/^move_cursor (void) $/
+multiply_fp	threads/thread.h	/^#define multiply_fp(x, y) ((int64_t)x) * y \/ fff$/
+multiply_fp_int	threads/thread.h	/^#define multiply_fp_int(x, n) x*n$/
 munmap	lib/user/syscall.c	/^munmap (mapid_t mapid)$/
 newline	devices/vga.c	/^newline (void)$/
 next	devices/intq.c	/^next (int pos) $/
 next_thread_to_run	threads/thread.c	/^next_thread_to_run (void) $/
 nlz	lib/arithmetic.c	/^nlz (uint32_t x) $/
+num_ready	threads/thread.c	/^int num_ready(void)$/
 offsetof	lib/stddef.h	/^#define offsetof(TYPE, MEMBER) ((size_t) &((TYPE */
 open	lib/user/syscall.c	/^open (const char *file)$/
 outb	threads/io.h	/^outb (uint16_t port, uint8_t data)$/
@@ -376,12 +388,15 @@ pg_round_down	threads/vaddr.h	/^static inline void *pg_round_down (const void *v
 pg_round_up	threads/vaddr.h	/^static inline void *pg_round_up (const void *va) {/
 pic_end_of_interrupt	threads/interrupt.c	/^pic_end_of_interrupt (int irq) $/
 pic_init	threads/interrupt.c	/^pic_init (void)$/
-power_off	threads/init.c	/^power_off (void) $/
+pop_from_mlfq	threads/thread.c	/^struct list_elem * pop_from_mlfq(void)$/
 power_off	threads/init.h	/^void power_off (void) NO_RETURN;$/
+power_off	threads/init.c	/^power_off (void) $/
 print_ata_string	devices/disk.c	/^print_ata_string (char *string, size_t size) $/
 print_stats	threads/init.c	/^print_stats (void) $/
 printf	lib/stdio.c	/^printf (const char *format, ...) $/
 printf	lib/stdio.h	/^int printf (const char *, ...) PRINTF_FORMAT (1, 2/
+priority_compare	threads/thread.c	/^bool priority_compare (const struct list_elem *a,$/
+priority_update	threads/thread.c	/^void priority_update(void)$/
 process_activate	userprog/process.c	/^process_activate (void)$/
 process_execute	userprog/process.c	/^process_execute (const char *file_name) $/
 process_exit	userprog/process.c	/^process_exit (void)$/
@@ -391,14 +406,15 @@ pte_create_kernel	threads/pte.h	/^static inline uint32_t pte_create_kernel (void
 pte_create_user	threads/pte.h	/^static inline uint32_t pte_create_user (void *page/
 pte_get_page	threads/pte.h	/^static inline void *pte_get_page (uint32_t pte) {$/
 ptov	threads/vaddr.h	/^ptov (uintptr_t paddr)$/
+push2mlfq	threads/thread.c	/^void push2mlfq(struct thread *input)$/
 push2sleep	threads/thread.c	/^void push2sleep(int64_t ticks){$/
 putbuf	lib/kernel/console.c	/^putbuf (const char *buffer, size_t n) $/
 putc_poll	devices/serial.c	/^putc_poll (uint8_t byte) $/
-putchar	lib/kernel/console.c	/^putchar (int c) $/
 putchar	lib/user/console.c	/^putchar (int c) $/
+putchar	lib/kernel/console.c	/^putchar (int c) $/
 putchar_have_lock	lib/kernel/console.c	/^putchar_have_lock (uint8_t c) $/
-puts	lib/kernel/console.c	/^puts (const char *s) $/
 puts	lib/user/console.c	/^puts (const char *s) $/
+puts	lib/kernel/console.c	/^puts (const char *s) $/
 qsort	lib/stdlib.c	/^qsort (void *array, size_t cnt, size_t size,$/
 ram_init	threads/init.c	/^ram_init (void) $/
 ram_pgs	threads/loader.S	/^ram_pgs:$/
@@ -411,6 +427,7 @@ read_sector	threads/loader.S	/^read_sector:$/
 readdir	lib/user/syscall.c	/^readdir (int fd, char name[READDIR_MAX_LEN + 1]) $/
 real_time_sleep	devices/timer.c	/^real_time_sleep (int64_t num, int32_t denom) $/
 realloc	threads/malloc.c	/^realloc (void *old_block, size_t new_size) $/
+recent_cpu_update	threads/thread.c	/^void recent_cpu_update()$/
 reg_alt_status	devices/disk.c	/^#define reg_alt_status(CHANNEL) reg_ctl (CHANNEL) /
 reg_command	devices/disk.c	/^#define reg_command(CHANNEL) reg_status (CHANNEL) /
 reg_ctl	devices/disk.c	/^#define reg_ctl(CHANNEL) ((CHANNEL)->reg_base + 0x/
@@ -470,6 +487,8 @@ strrchr	lib/string.c	/^strrchr (const char *string, int c_) $/
 strspn	lib/string.c	/^strspn (const char *string, const char *skip) $/
 strstr	lib/string.c	/^strstr (const char *haystack, const char *needle) /
 strtok_r	lib/string.c	/^strtok_r (char *s, const char *delimiters, char **/
+subfp	threads/thread.h	/^#define subfp(x, y) x-y$/
+subfp_int	threads/thread.h	/^#define subfp_int(x, n) x-n*fff$/
 swap	lib/kernel/list.c	/^swap (struct list_elem **a, struct list_elem **b) /
 swap_byte	lib/random.c	/^swap_byte (uint8_t *a, uint8_t *b) $/
 switch_entry	threads/switch.S	/^switch_entry:$/
@@ -492,7 +511,7 @@ thread_get_priority	threads/thread.c	/^thread_get_priority (void) $/
 thread_get_recent_cpu	threads/thread.c	/^thread_get_recent_cpu (void) $/
 thread_name	threads/thread.c	/^thread_name (void) $/
 thread_print_stats	threads/thread.c	/^thread_print_stats (void) $/
-thread_set_nice	threads/thread.c	/^thread_set_nice (int nice UNUSED) $/
+thread_set_nice	threads/thread.c	/^thread_set_nice (int nice ) $/
 thread_set_priority	threads/thread.c	/^thread_set_priority (int new_priority) $/
 thread_start	threads/thread.c	/^thread_start (void) $/
 thread_tick	threads/thread.c	/^thread_tick (void) $/
@@ -506,7 +525,7 @@ timer_interrupt	devices/timer.c	/^timer_interrupt (struct intr_frame *args UNUSE
 timer_msleep	devices/timer.c	/^timer_msleep (int64_t ms) $/
 timer_nsleep	devices/timer.c	/^timer_nsleep (int64_t ns) $/
 timer_print_stats	devices/timer.c	/^timer_print_stats (void) $/
-timer_sleep	devices/timer.c	/^timer_sleep (int64_t ticks) $/
+timer_sleep	devices/timer.c	/^timer_sleep (int64_t tick) $/
 timer_ticks	devices/timer.c	/^timer_ticks (void) $/
 timer_usleep	devices/timer.c	/^timer_usleep (int64_t us) $/
 tolower	lib/ctype.h	/^static inline int tolower (int c) { return isupper/
@@ -518,7 +537,7 @@ tss_update	userprog/tss.c	/^tss_update (void) $/
 turn_off_least_1bit	lib/kernel/hash.c	/^turn_off_least_1bit (size_t x) $/
 udiv64	lib/arithmetic.c	/^udiv64 (uint64_t n, uint64_t d)$/
 umod64	lib/arithmetic.c	/^umod64 (uint64_t n, uint64_t d)$/
-updatesleep	threads/thread.c	/^void updatesleep(void){$/
+updatesleep	threads/thread.c	/^void updatesleep(int64_t ticks){$/
 usage	threads/init.c	/^usage (void)$/
 va_arg	lib/stdarg.h	/^#define va_arg(LIST, TYPE)	__builtin_va_arg (LIST,/
 va_copy	lib/stdarg.h	/^#define va_copy(DST, SRC)	__builtin_va_copy (DST, /
@@ -527,8 +546,8 @@ va_start	lib/stdarg.h	/^#define va_start(LIST, ARG)	__builtin_va_start (LI/
 validate_segment	userprog/process.c	/^validate_segment (const struct Elf32_Phdr *phdr, s/
 vga_putc	devices/vga.c	/^vga_putc (int c)$/
 vhprintf	lib/user/console.c	/^vhprintf (int handle, const char *format, va_list /
-vprintf	lib/kernel/console.c	/^vprintf (const char *format, va_list args) $/
 vprintf	lib/user/console.c	/^vprintf (const char *format, va_list args) $/
+vprintf	lib/kernel/console.c	/^vprintf (const char *format, va_list args) $/
 vprintf_helper	lib/kernel/console.c	/^vprintf_helper (char c, void *char_cnt_) $/
 vsnprintf	lib/stdio.c	/^vsnprintf (char *buffer, size_t buf_size, const ch/
 vsnprintf_helper	lib/stdio.c	/^vsnprintf_helper (char ch, void *aux_)$/
@@ -537,5 +556,6 @@ wait	devices/intq.c	/^wait (struct intq *q UNUSED, struct thread **waite/
 wait	lib/user/syscall.c	/^wait (pid_t pid)$/
 wait_until_idle	devices/disk.c	/^wait_until_idle (const struct disk *d) $/
 wait_while_busy	devices/disk.c	/^wait_while_busy (const struct disk *d) $/
+wakeup_tick_compare	threads/thread.c	/^bool wakeup_tick_compare (const struct list_elem */
 write	lib/user/syscall.c	/^write (int fd, const void *buffer, unsigned size)$/
 write_ier	devices/serial.c	/^write_ier (void) $/

@@ -37,9 +37,23 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+  /* thread name size <= 16
+   * therefore when thread_create call, the name of thread should not contain arguments */
+  char temp[16];
+  char* save_ptr;
+  char* func_name;
+  int i=0;
+  while(i<15)
+  {
+	temp[i]= file_name[i];
+	if(temp[i]==' ')
+	temp[i]='\0';
+	i++;
+  }
+  temp[15]='\0';	  
 
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (file_name, PRI_DEFAULT, start_process, fn_copy);
+  tid = thread_create (temp, PRI_DEFAULT, start_process, fn_copy);
   if (tid == TID_ERROR)
     palloc_free_page (fn_copy); 
   return tid;
@@ -88,7 +102,45 @@ start_process (void *f_name)
 int
 process_wait (tid_t child_tid UNUSED) 
 {
-  return -1;
+	int realchild=0;
+  	struct thread * curr = thread_current();
+	struct list_elem *find;
+        for(find = list_begin(&curr->child_list);
+        find != list_end(&curr->child_list);
+        find = list_next(find))
+        {
+	    struct thread * temp = list_entry(find, struct thread, child_elem);
+            if(temp->tid==child_tid)
+            realchild=1;
+        }
+  if(!realchild)
+  {
+	return -1;
+  }
+  realchild=0;
+  while(!realchild)
+  {
+enum intr_level old_level;
+            old_level = intr_disable ();
+
+	realchild=1;
+	 for(find = list_begin(&curr->child_list);
+        find != list_end(&curr->child_list);
+        find = list_next(find))
+        {
+            struct thread * temp = list_entry(find, struct thread, child_elem);
+            if(temp->tid==child_tid)
+	    realchild=realchild*0;
+	    else
+	    realchild=realchild*1;
+	    
+        }
+	
+            intr_set_level (old_level);
+	
+  }
+
+  return 1;
 }
 
 /* Free the current process's resources. */
@@ -221,8 +273,24 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
+
+  /* Before file_open, find function name*/
+  char temp[16];
+  char* save_ptr;
+  char* func_name;
+  i=0;
+  while(i<15)
+  {
+	temp[i]= file_name[i];
+	if(temp[i]==' ')
+	temp[i]='\0';
+	i++;
+  }
+  temp[15]='\0';	  
+
+
   /* Open executable file. */
-  file = filesys_open (file_name);
+  file = filesys_open (temp);
   if (file == NULL) 
     {
       printf ("load: %s: open failed\n", file_name);
@@ -304,7 +372,84 @@ load (const char *file_name, void (**eip) (void), void **esp)
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
+  /* After stack setup make argument passing*/
 
+  /* tokenizing*/
+  char *token;
+  int size_token;
+  int num_token=0;
+  i=0;
+   for (token = strtok_r (file_name, " ", &save_ptr); token != NULL;
+        token = strtok_r (NULL, " ", &save_ptr))
+  {
+	
+	size_token= strlen(token)+1;
+	*esp = *esp - size_token;
+	memcpy(*esp, token, size_token);
+	
+	num_token++;
+
+  }   
+
+  size_t align =(size_t) *esp%4;
+  char *zero=*esp;
+  for(i=0; i<align; i++)
+  {
+	zero= zero-(size_t)1;
+	*esp= *esp-(size_t)1; 
+	*zero=0;
+  }
+  ASSERT((size_t)*esp%4==0);
+  
+  zero=*esp;
+  for(i=0; i<4; i++)
+  {
+	zero= zero-(size_t)1;
+	*esp= *esp-(size_t)1; 
+	*zero=0;
+  }  
+ char * find= *esp;
+ int address;
+  i=num_token;
+  while(true)
+  {
+	if(*find!='\0')
+	break;
+	find++;
+  }
+  while(true)
+  {
+		
+	*esp = *esp -(size_t) 4;
+        address=find;
+	memcpy(*esp, &address, 4);
+	if(--i==0)
+	break;
+	while(true)
+	{
+		if(*find=='\0')
+		break;
+		find++;
+	}
+	find++;
+  }
+
+  int argv_start=*esp;
+  *esp = *esp -(size_t) 4;
+  memcpy(*esp, &argv_start, 4);
+ 
+  *esp = *esp -(size_t) 4;
+  memcpy(*esp,(char*) &num_token, 4);
+  zero=*esp;
+  for(i=0; i<4; i++)
+  {
+	zero= zero-(size_t)1;
+	*esp= *esp-(size_t)1; 
+	*zero=0;
+  }
+  
+  
+  	
   /* Start address. */
   *eip = (void (*) (void)) ehdr.e_entry;
 
@@ -329,7 +474,7 @@ validate_segment (const struct Elf32_Phdr *phdr, struct file *file)
   if ((phdr->p_offset & PGMASK) != (phdr->p_vaddr & PGMASK)) 
     return false; 
 
-  /* p_offset must point within FILE. */
+  /* /p_offset must point within FILE. */
   if (phdr->p_offset > (Elf32_Off) file_length (file)) 
     return false;
 
