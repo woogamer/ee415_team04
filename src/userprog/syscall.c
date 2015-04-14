@@ -30,6 +30,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 	struct list_elem *find;
 	struct file *file;
 	unsigned position;
+	char ** temp;
 
   //printf("Systellcall handler called!: %d\n",*(int *)f->esp);
 
@@ -42,12 +43,23 @@ syscall_handler (struct intr_frame *f UNUSED)
 		if(*(char **)(f->esp + 4) == NULL){
 			/* TODO: fill something here. */
 		}
+
+ 		//char pointer valid check
+                temp=(char**) (f->esp+4);
+                if(!pagedir_get_page(curr->pagedir, *temp))
+                sys_exit(-1);
 		f->eax = process_execute( *(char **)(f->esp + 4));
 		break;
 	
 	//bool create (const char *file, unsigned initial_size)
 	case SYS_CREATE:
 		isUseraddr(f->esp,2);
+		
+		//char pointer valid check
+                temp=(char**) (f->esp+4);
+                if(!pagedir_get_page(curr->pagedir, *temp))
+                sys_exit(-1);
+
 		f->eax = filesys_create( *(char **)(f->esp+4), *(off_t *)(f->esp+8));
 		break;
 
@@ -65,6 +77,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 		fd = *(int*)(f->esp+4);
 		buffer = *(char**)(f->esp+8);	
 		length = *(int*)(f->esp+12);
+
+		//char pointer valid check
+                temp=(char**) (f->esp+8);
+                if(!pagedir_get_page(curr->pagedir, *temp))
+                sys_exit(-1);
 
 		/* read from the keyboard*/
 		if(fd == 0){
@@ -113,6 +130,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 		
 		f->eax = file_length(file);
 	
+
 		lock_release(&sys_lock);
 		break;
 
@@ -130,6 +148,11 @@ syscall_handler (struct intr_frame *f UNUSED)
   		isUseraddr(f->esp,1);
   		lock_acquire(&sys_lock);
   
+		//char pointer valid check
+                temp=(char**) (f->esp+4);
+                if(!pagedir_get_page(curr->pagedir, *temp))
+                sys_exit(-1);
+
   		char * name = *(char **)(f->esp+4);
 		file = filesys_open(name);
 		/* null pointer*/
@@ -155,6 +178,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 		fd = *(int*)(f->esp+4);
 		buffer = *(char**)(f->esp+8);	
 		length = *(int*)(f->esp+12);
+
+		//char pointer valid check
+                temp=(char**) (f->esp+8);
+                if(!pagedir_get_page(curr->pagedir, *temp))
+                sys_exit(-1);
 
 		/*stdin case*/  
 		if(fd == 0)
@@ -200,8 +228,8 @@ void
 isUseraddr(void *esp, int argnum)
 {
 	if((uint32_t)esp+argnum*4+4 > (uint32_t) PHYS_BASE)
-	//syscall_exit(-1);
-	;
+	sys_exit(-1);
+	
 }
 struct file *
 fd2file(int fd)
