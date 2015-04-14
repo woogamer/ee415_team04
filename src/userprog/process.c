@@ -102,7 +102,7 @@ start_process (void *f_name)
 int
 process_wait (tid_t child_tid) 
 {
-	int realchild=0;
+	int realchild = 0;
   	struct thread * curr = thread_current();
 	struct thread * child = NULL;
 	struct list_elem *find;
@@ -117,6 +117,7 @@ process_wait (tid_t child_tid)
 		{
 			struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
 			if(temp->tid == child_tid){
+				list_remove(find);
 				return temp->exit_status;
 			}
 		}
@@ -125,8 +126,8 @@ process_wait (tid_t child_tid)
 	/* Check whether child_tid is in the child_list of the running thread or not */
 	if(!list_empty(&curr->child_list)){
 		for(find = list_begin(&curr->child_list);
-		find != list_end(&curr->child_list);
-		find = list_next(find))
+			find != list_end(&curr->child_list);
+			find = list_next(find))
 		{
 			child = list_entry(find, struct thread, child_elem);
 			if(child->tid == child_tid){
@@ -146,6 +147,9 @@ process_wait (tid_t child_tid)
 	}else{
 		sema_down(&child->exit_sema);
 
+		/* When it reaches here, the child has called exit() by itself. */
+
+		/* When the child calls exit(), the elem of the child is in the terminated list of the parent. */
 		old_level = intr_disable ();
 		for(find = list_begin(&curr->terminated_child_list);
             find != list_end(&curr->terminated_child_list);
@@ -153,12 +157,14 @@ process_wait (tid_t child_tid)
         {
             struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
             if(temp->tid == child_tid){
+				list_remove(find);
                 return temp->exit_status;
             }
         }
 		intr_set_level (old_level);
 	}
 
+	/* Never reached */
 	return -1;
 }
 
