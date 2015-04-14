@@ -54,30 +54,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 	// void exit (int status)
 	case SYS_EXIT:
 		isUseraddr(f->esp,1);
-		parent = curr->parent; 
-			
-		enum intr_level old_level;
-		old_level = intr_disable ();
-
-		for(find = list_begin(&parent->child_list);
-			find != list_end(&parent->child_list);
-			find = list_next(find))
-		{
-			if(find == &curr->child_elem)
-			{
-				list_remove(find);
-				break;
-			}
-		}
-
-		/* move the elem to the terminated child list of the parent */
-		//list_push_back(&parent->terminated_child_list, &curr->terminated_child_elem);
-		curr->exit_status = *(int *)(f->esp+4);	
-
-		intr_set_level (old_level);
-
-		printf("%s: exit(%d)\n", curr->name, curr->exit_status);
-		thread_exit();
+		sys_exit(*(int *)(f->esp+4));
 		break;
 
 	//int read (int fd, void *buffer, unsigned size)

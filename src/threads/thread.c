@@ -77,6 +77,7 @@ static void *alloc_frame (struct thread *, size_t size);
 static void schedule (void);
 void schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
+void priority_update(void);
 static int i;
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
@@ -587,7 +588,7 @@ init_thread (struct thread *t, const char *name, int priority)
   list_init(&t->donate_list); /* Initialize donate_list  */
   list_init(&t->child_list);
   list_init(&t->terminated_child_list);
-  t->exit_status = 0;
+  sema_init(&t->exit_sema, 0);
   t->magic = THREAD_MAGIC;
 }
 

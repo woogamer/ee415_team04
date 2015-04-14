@@ -17,11 +17,9 @@
 #include "threads/palloc.h"
 #include "threads/thread.h"
 #include "threads/vaddr.h"
-#include "threads/synch.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
-void sys_exit(int status);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -42,6 +40,8 @@ process_execute (const char *file_name)
   /* thread name size <= 16
    * therefore when thread_create call, the name of thread should not contain arguments */
   char temp[16];
+  char* save_ptr;
+  char* func_name;
   int i=0;
   while(i<15)
   {
@@ -102,64 +102,72 @@ start_process (void *f_name)
 int
 process_wait (tid_t child_tid) 
 {
+	int status;
 	int realchild=0;
   	struct thread * curr = thread_current();
-	struct thread * child = NULL;
 	struct list_elem *find;
 
 	enum intr_level old_level;
 	old_level = intr_disable ();
-	/* If child_tid has already been terminated, wait() returns its exit status. */
 	if(!list_empty(&curr->terminated_child_list)){
 		for(find = list_begin(&curr->terminated_child_list);
 			find != list_end(&curr->terminated_child_list);
 			find = list_next(find))
 		{
-			struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
+			struct thread *temp = list_entry(find, struct thread, terminated_child_elem);
 			if(temp->tid == child_tid){
 				return temp->exit_status;
 			}
 		}
 	}
+	intr_set_level (old_level);
 
 	/* Check whether child_tid is in the child_list of the running thread or not */
-	if(!list_empty(&curr->child_list)){
-		for(find = list_begin(&curr->child_list);
-		find != list_end(&curr->child_list);
-		find = list_next(find))
-		{
-			child = list_entry(find, struct thread, child_elem);
-			if(child->tid == child_tid){
-				realchild = 1;
-				break;
-			}
+	for(find = list_begin(&curr->child_list);
+	find != list_end(&curr->child_list);
+	find = list_next(find))
+	{
+	    struct thread *temp = list_entry(find, struct thread, child_elem);
+		if(temp->tid == child_tid){
+            realchild = 1;
+			break;
 		}
 	}
-
-	intr_set_level (old_level);
 
 	/* If child_tid does not exist in the child list, then*/
 	if(!realchild)
 	{
 		/* return -1 */
 		return -1;
-	}else{
-		sema_down(&child->exit_sema);
+	}
 
+	/* If it does, */
+	realchild=0;
+	status = 1;
+
+	/* waiting for 'child_tid' until it   */
+	while(!realchild)
+	{
+		realchild = 1;
+
+		enum intr_level old_level;
 		old_level = intr_disable ();
-		for(find = list_begin(&curr->terminated_child_list);
-            find != list_end(&curr->terminated_child_list);
-            find = list_next(find))
-        {
-            struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
-            if(temp->tid == child_tid){
-                return temp->exit_status;
-            }
-        }
+
+		for(find = list_begin(&curr->child_list);
+		find != list_end(&curr->child_list);
+		find = list_next(find))
+		{
+			struct thread * temp = list_entry(find, struct thread, child_elem);
+			if(temp->tid == child_tid){
+				realchild = 0;
+				status = temp->exit_status;
+				break;
+			}
+		}
 		intr_set_level (old_level);
 	}
 
-	return -1;
+	return 1;
 }
 
 /* Free the current process's resources. */
@@ -637,13 +645,11 @@ void sys_exit(int status){
 	list_remove(&curr->child_elem);
 	struct terminated_proc_info *terminated_info = malloc(sizeof(struct terminated_proc_info));
 	terminated_info->exit_status = status;
-	terminated_info->tid = curr->tid;
 
 	list_push_back(&parent->terminated_child_list, &terminated_info->terminated_elem);	
 	
 	intr_set_level (old_level);
 
 	printf("%s: exit(%d)\n", curr->name, status);
-	sema_up(&curr->exit_sema);
 	thread_exit();
 }

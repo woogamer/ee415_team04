@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -102,20 +103,27 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
  
     struct list_elem child_elem;		/* Fof child_list*/
-    struct list_elem terminated_child_elem;		/* Fof child_list*/
 
     struct list child_list;				/* List of child threads */
     struct list terminated_child_list;	/* List of terminated child threads */
 
+	struct semaphore exit_sema; /* exit_sema becomes down right after the thread is created.
+								  * exit_sema goes up when the thread calls exit() system call. */
+
     struct thread * parent;		/* thread pointer to parent*/
     struct list fd_list;		/* file discript list*/
     int fd_num;				/* num of fd*/
-	int exit_status;
 #endif
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
+
+struct terminated_proc_info{
+    struct list_elem terminated_elem;
+	tid_t tid;	
+	int exit_status;
+};
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
