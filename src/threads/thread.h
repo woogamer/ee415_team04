@@ -112,7 +112,10 @@ struct thread
 
     struct thread * parent;		/* thread pointer to parent*/
     struct list fd_list;		/* file discript list*/
+
     int fd_num;				/* num of fd*/
+
+	struct file *exec_file; /**/ 
 #endif
 
     /* Owned by thread.c. */

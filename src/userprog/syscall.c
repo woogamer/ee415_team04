@@ -29,6 +29,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 	int length;
 	struct list_elem *find;
 	struct file *file;
+	unsigned position;
 
   //printf("Systellcall handler called!: %d\n",*(int *)f->esp);
 
@@ -42,7 +43,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 			/* TODO: fill something here. */
 		}
 		f->eax = process_execute( *(char **)(f->esp + 4));
-		
 		break;
 	
 	//bool create (const char *file, unsigned initial_size)
@@ -168,14 +168,26 @@ syscall_handler (struct intr_frame *f UNUSED)
 		}
 		else
 		{
-			struct file * file = fd2file(fd);
+			file = fd2file(fd);
 
 			if(!file)
 				f->eax = -1;
-			else
+			else{
 				f->eax = file_write(file, buffer, length);		
+			}
 		}
 		lock_release(&sys_lock);
+		break;
+
+	//void seek (int fd, unsigned position)
+	case SYS_SEEK:
+		isUseraddr(f->esp,2);
+		fd = *(int*)(f->esp+4);
+		position = *(unsigned*)(f->esp+8);
+
+		file = fd2file(fd);
+		file_seek(file, (off_t)position);
+		
 		break;
 
 
