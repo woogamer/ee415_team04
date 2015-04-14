@@ -2,7 +2,9 @@
 #define FILESYS_FILE_H
 #include "list.h"
 #include "filesys/off_t.h"
+
 /* An open file. */
+
 struct file 
   {
     struct inode *inode;        /* File's inode. */
@@ -11,7 +13,6 @@ struct file
     struct list_elem elem;	/* file discript list_elem*/
     int fd;			/* file discript number*/
   };
-
 
 struct inode;
 

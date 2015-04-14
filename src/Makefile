@@ -1,4 +1,4 @@
-BUILD_SUBDIRS = threads userprog vm filesys
+BUILD_SUBDIRS = threads userprog vm filesys lib/user
 
 all::
 	@echo "Run 'make' in subdirectories: $(BUILD_SUBDIRS)."

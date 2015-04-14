@@ -96,8 +96,8 @@ console_print_stats	lib/kernel/console.c	/^console_print_stats (void) $/
 create	lib/user/syscall.c	/^create (const char *file, unsigned initial_size)$/
 debug_backtrace	lib/debug.c	/^debug_backtrace (void) $/
 debug_panic	lib/user/debug.c	/^debug_panic (const char *file, int line, const cha/
-debug_panic	lib/debug.h	/^void debug_panic (const char *file, int line, cons/
 debug_panic	lib/kernel/debug.c	/^debug_panic (const char *file, int line, const cha/
+debug_panic	lib/debug.h	/^void debug_panic (const char *file, int line, cons/
 dir_add	filesys/directory.c	/^dir_add (struct dir *dir, const char *name, disk_s/
 dir_close	filesys/directory.c	/^dir_close (struct dir *dir) $/
 dir_create	filesys/directory.c	/^dir_create (disk_sector_t sector, size_t entry_cnt/
@@ -126,6 +126,7 @@ exception_init	userprog/exception.c	/^exception_init (void) $/
 exception_print_stats	userprog/exception.c	/^exception_print_stats (void) $/
 exec	lib/user/syscall.c	/^exec (const char *file)$/
 exit	lib/user/syscall.c	/^exit (int status)$/
+fd2file	userprog/syscall.c	/^fd2file(int fd)$/
 file_allow_write	filesys/file.c	/^file_allow_write (struct file *file) $/
 file_close	filesys/file.c	/^file_close (struct file *file) $/
 file_deny_write	filesys/file.c	/^file_deny_write (struct file *file) $/
@@ -191,8 +192,8 @@ hash_size	lib/kernel/hash.c	/^hash_size (struct hash *h) $/
 hash_string	lib/kernel/hash.c	/^hash_string (const char *s_) $/
 heapify	lib/stdlib.c	/^heapify (unsigned char *array, size_t i, size_t cn/
 hex_dump	lib/stdio.c	/^hex_dump (uintptr_t ofs, const void *buf_, size_t /
-hprintf	lib/user/console.c	/^hprintf (int handle, const char *format, ...) $/
 hprintf	lib/user/stdio.h	/^int hprintf (int, const char *, ...) PRINTF_FORMAT/
+hprintf	lib/user/console.c	/^hprintf (int handle, const char *format, ...) $/
 identify_ata_device	devices/disk.c	/^identify_ata_device (struct disk *d) $/
 idle	threads/thread.c	/^idle (void *idle_started_ UNUSED) $/
 inb	threads/io.h	/^inb (uint16_t port)$/
@@ -250,6 +251,7 @@ intr_yield_on_return	threads/interrupt.c	/^intr_yield_on_return (void) $/
 inumber	lib/user/syscall.c	/^inumber (int fd) $/
 invalidate_pagedir	userprog/pagedir.c	/^invalidate_pagedir (uint32_t *pd) $/
 inw	threads/io.h	/^inw (uint16_t port)$/
+isUseraddr	userprog/syscall.c	/^isUseraddr(void *esp, int argnum)$/
 is_interior	lib/kernel/list.c	/^is_interior (struct list_elem *elem)$/
 is_kernel_vaddr	threads/vaddr.h	/^is_kernel_vaddr (const void *vaddr) $/
 is_power_of_2	lib/kernel/hash.c	/^is_power_of_2 (size_t x) $/
@@ -389,8 +391,8 @@ pg_round_up	threads/vaddr.h	/^static inline void *pg_round_up (const void *va) {
 pic_end_of_interrupt	threads/interrupt.c	/^pic_end_of_interrupt (int irq) $/
 pic_init	threads/interrupt.c	/^pic_init (void)$/
 pop_from_mlfq	threads/thread.c	/^struct list_elem * pop_from_mlfq(void)$/
-power_off	threads/init.h	/^void power_off (void) NO_RETURN;$/
 power_off	threads/init.c	/^power_off (void) $/
+power_off	threads/init.h	/^void power_off (void) NO_RETURN;$/
 print_ata_string	devices/disk.c	/^print_ata_string (char *string, size_t size) $/
 print_stats	threads/init.c	/^print_stats (void) $/
 printf	lib/stdio.c	/^printf (const char *format, ...) $/
@@ -400,7 +402,7 @@ priority_update	threads/thread.c	/^void priority_update(void)$/
 process_activate	userprog/process.c	/^process_activate (void)$/
 process_execute	userprog/process.c	/^process_execute (const char *file_name) $/
 process_exit	userprog/process.c	/^process_exit (void)$/
-process_wait	userprog/process.c	/^process_wait (tid_t child_tid UNUSED) $/
+process_wait	userprog/process.c	/^process_wait (tid_t child_tid) $/
 pt_no	threads/pte.h	/^static inline unsigned pt_no (const void *va) {$/
 pte_create_kernel	threads/pte.h	/^static inline uint32_t pte_create_kernel (void *pa/
 pte_create_user	threads/pte.h	/^static inline uint32_t pte_create_user (void *page/
@@ -552,8 +554,8 @@ vprintf_helper	lib/kernel/console.c	/^vprintf_helper (char c, void *char_cnt_) $
 vsnprintf	lib/stdio.c	/^vsnprintf (char *buffer, size_t buf_size, const ch/
 vsnprintf_helper	lib/stdio.c	/^vsnprintf_helper (char ch, void *aux_)$/
 vtop	threads/vaddr.h	/^vtop (const void *vaddr)$/
-wait	devices/intq.c	/^wait (struct intq *q UNUSED, struct thread **waite/
 wait	lib/user/syscall.c	/^wait (pid_t pid)$/
+wait	devices/intq.c	/^wait (struct intq *q UNUSED, struct thread **waite/
 wait_until_idle	devices/disk.c	/^wait_until_idle (const struct disk *d) $/
 wait_while_busy	devices/disk.c	/^wait_while_busy (const struct disk *d) $/
 wakeup_tick_compare	threads/thread.c	/^bool wakeup_tick_compare (const struct list_elem */

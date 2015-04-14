@@ -100,47 +100,71 @@ start_process (void *f_name)
    This function will be implemented in problem 2-2.  For now, it
    does nothing. */
 int
-process_wait (tid_t child_tid UNUSED) 
+process_wait (tid_t child_tid) 
 {
+	int status;
 	int realchild=0;
   	struct thread * curr = thread_current();
 	struct list_elem *find;
-        for(find = list_begin(&curr->child_list);
-        find != list_end(&curr->child_list);
-        find = list_next(find))
-        {
-	    struct thread * temp = list_entry(find, struct thread, child_elem);
-            if(temp->tid==child_tid)
-            realchild=1;
-        }
-  if(!realchild)
-  {
-	return -1;
-  }
-  realchild=0;
-  while(!realchild)
-  {
-enum intr_level old_level;
-            old_level = intr_disable ();
 
-	realchild=1;
-	 for(find = list_begin(&curr->child_list);
-        find != list_end(&curr->child_list);
-        find = list_next(find))
-        {
-            struct thread * temp = list_entry(find, struct thread, child_elem);
-            if(temp->tid==child_tid)
-	    realchild=realchild*0;
-	    else
-	    realchild=realchild*1;
-	    
-        }
-	
-            intr_set_level (old_level);
-	
-  }
+	if(!list_empty(&curr->terminated_child_list)){
+		for(find = list_begin(&curr->terminated_child_list);
+		find != list_end(&curr->terminated_child_list);
+		find = list_next(find))
+		{
+			struct thread *temp = list_entry(find, struct thread, terminated_child_elem);
+			if(temp->tid == child_tid){
+				return temp->exit_status;
+			}
+		}
+	}
 
-  return 1;
+	/* Check whether child_tid is in the child_list of the running thread or not */
+	for(find = list_begin(&curr->child_list);
+	find != list_end(&curr->child_list);
+	find = list_next(find))
+	{
+	    struct thread *temp = list_entry(find, struct thread, child_elem);
+		if(temp->tid == child_tid){
+            realchild = 1;
+			break;
+		}
+	}
+
+	/* If child_tid does not exist in the child list, then*/
+	if(!realchild)
+	{
+		/* return -1 */
+		return -1;
+	}
+
+	/* If it does, */
+	realchild=0;
+	status = 1;
+
+	/* waiting for 'child_tid' until it   */
+	while(!realchild)
+	{
+		realchild = 1;
+
+		enum intr_level old_level;
+		old_level = intr_disable ();
+
+		for(find = list_begin(&curr->child_list);
+		find != list_end(&curr->child_list);
+		find = list_next(find))
+		{
+			struct thread * temp = list_entry(find, struct thread, child_elem);
+			if(temp->tid == child_tid){
+				realchild = 0;
+				status = temp->exit_status;
+				break;
+			}
+		}
+		intr_set_level (old_level);
+	}
+
+	return 1;
 }
 
 /* Free the current process's resources. */

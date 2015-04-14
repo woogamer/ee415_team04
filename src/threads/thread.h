@@ -100,13 +100,17 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
-
  
-    struct list_elem child_elem;	/* Fof child_list*/
-    struct list child_list; 		/* List of child threads */
+    struct list_elem child_elem;		/* Fof child_list*/
+    struct list_elem terminated_child_elem;		/* Fof child_list*/
+
+    struct list child_list;				/* List of child threads */
+    struct list terminated_child_list;	/* List of terminated child threads */
+
     struct thread * parent;		/* thread pointer to parent*/
     struct list fd_list;		/* file discript list*/
     int fd_num;				/* num of fd*/
+	int exit_status;
 #endif
 
     /* Owned by thread.c. */

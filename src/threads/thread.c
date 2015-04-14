@@ -214,12 +214,15 @@ thread_create (const char *name, int priority,
   t->recent_cpu=0;
   /* fd is started from 2*/
   t->fd_num=2;
+  list_init(&t->fd_list);
   /* update child parent information*/
   if(strcmp(t->name,"main") && strcmp(t->name,"idle"))
-  list_push_back(&thread_current()->child_list, &t->child_elem);
+	  list_push_back(&thread_current()->child_list, &t->child_elem);
+
   t->parent = thread_current();
   /* Add to run queue. */
   thread_unblock (t);
+
   if(get_priority(t) > thread_get_priority()){
     thread_yield();
   }
@@ -579,9 +582,12 @@ init_thread (struct thread *t, const char *name, int priority)
   t->stack = (uint8_t *) t + PGSIZE;
   /*advanced scheduler does not use set, get priority*/
   if(!thread_mlfqs) 
-  t->priority = priority;
+	  t->priority = priority;
+
   list_init(&t->donate_list); /* Initialize donate_list  */
   list_init(&t->child_list);
+  list_init(&t->terminated_child_list);
+  t->exit_status = 0;
   t->magic = THREAD_MAGIC;
 }
 
