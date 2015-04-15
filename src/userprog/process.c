@@ -18,6 +18,7 @@
 #include "threads/thread.h"
 #include "threads/vaddr.h"
 #include "threads/synch.h"
+#include "threads/malloc.h"
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
@@ -56,13 +57,23 @@ process_execute (const char *file_name)
   sema_init(&s_c->sema, 0);
   s_c->file_name = fn_copy;
 
+  //printf("Thread will become created. %s\n", fn_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (temp, PRI_DEFAULT, start_process, s_c);
 
+  if (tid == TID_ERROR){
+	  free(s_c);
+      palloc_free_page (fn_copy); 
+	  return tid;
+  }
+ 
   sema_down(&s_c->sema);
+  //printf("Thread will be running. %s\n", fn_copy);
 
-  if(!s_c->success)
+  if(!s_c->success){
+	//printf("This thread is failed.\n");
 	tid = TID_ERROR;
+  }
   //if (tid == TID_ERROR)
   //  palloc_free_page (fn_copy); 
 
@@ -77,6 +88,7 @@ start_process (void *f_name)
 {
   struct sema_char *s_c = (struct sema_char *)f_name;
   char *file_name = s_c->file_name;
+  //printf("Start process %s\n", file_name);
 
   struct intr_frame if_;
   bool success;
@@ -90,15 +102,15 @@ start_process (void *f_name)
   s_c->success = success;
 
   /* If load failed, quit. */
+  palloc_free_page (file_name);
+  sema_up(&s_c->sema);
 
   if (!success){
-	palloc_free_page (file_name);
-	sema_up(&s_c->sema);
+	//sema_up(&s_c->sema);
     //thread_exit ();
     sys_exit(-1);
   }
 
-  sema_up(&s_c->sema);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -680,19 +692,39 @@ void sys_exit(int status){
 	list_push_back(&parent->terminated_child_list, &terminated_info->terminated_elem);	
 
 	struct list_elem *find;
-	for(find = list_begin(&curr->fd_list);	
-		find != list_end(&curr->fd_list);
-		find = list_next(find))
-	{
-		struct file *temp = list_entry(find, struct file, elem);
-		find = list_remove(find);
-		find = list_prev(find);
-		free(temp);
+	if(!list_empty(&curr->fd_list)){
+		for(find = list_begin(&curr->fd_list);	
+			find != list_end(&curr->fd_list);
+			find = list_next(find))
+		{
+			struct file *temp = list_entry(find, struct file, elem);
+			find = list_remove(find);
+			find = list_prev(find);
+			file_close(temp);
+		}
 	}
-	
+
+	//printf("Removing the terminate list...\n");
+#if 1
+	if(!list_empty(&curr->terminated_child_list)){
+		for(find = list_begin(&curr->terminated_child_list);	
+			find != list_end(&curr->terminated_child_list);
+			find = list_next(find))
+		{
+			struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
+			find = list_remove(find);
+			find = list_prev(find);
+			free(temp);
+		}
+	}
+#endif
+	printf("%s: exit(%d)\n",  curr->name, status);
+	//printf("%s: exit(%d) Terminated child: %s Ready list size: %d \n", curr->name, status,
+	//		 list_empty(&curr->terminated_child_list)?"SUCC":"FAIL",
+	//		 list_size(&ready_list)
+	//	  );
 	intr_set_level (old_level);
 
-	printf("%s: exit(%d)\n", curr->name, status);
 	sema_up(&curr->exit_sema);
 	file_close(curr->exec_file);
 	thread_exit();

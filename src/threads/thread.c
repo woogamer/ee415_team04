@@ -28,7 +28,7 @@
 
 /* List of processes in THREAD_READY state, that is, processes
    that are ready to run but not actually running. */
-static struct list ready_list;
+//static struct list ready_list;
 /* List of processes which is sleeping*/
 static struct list sleep_list;
 /* List of processes which is blocked*/
@@ -180,6 +180,7 @@ tid_t
 thread_create (const char *name, int priority,
                thread_func *function, void *aux) 
 {
+  //printf("TEST1\n");
   struct thread *t;
   struct kernel_thread_frame *kf;
   struct switch_entry_frame *ef;
@@ -190,9 +191,12 @@ thread_create (const char *name, int priority,
 
   /* Allocate thread. */
   t = palloc_get_page (PAL_ZERO);
-  if (t == NULL)
+  if (t == NULL){
+	printf("");
     return TID_ERROR;
+  }
 
+  //printf("TEST2\n");
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
@@ -222,6 +226,7 @@ thread_create (const char *name, int priority,
 
   t->parent = thread_current();
   /* Add to run queue. */
+  //printf("Thead will be in the ready queue. %s\n", name);
   thread_unblock (t);
 
   if(get_priority(t) > thread_get_priority()){

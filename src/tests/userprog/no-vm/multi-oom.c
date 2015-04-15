@@ -69,6 +69,10 @@ consume_some_resources_and_die (int seed)
   random_init (seed);
   int *PHYS_BASE = (int *)0xC0000000;
 
+// #######################################################
+  //int test_case = 0;
+  //switch (test_case)
+// #######################################################
   switch (random_ulong () % 5)
     {
       case 0:

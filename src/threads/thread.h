@@ -15,8 +15,14 @@ enum thread_status
     THREAD_DYING        /* About to be destroyed. */
   };
 
+/* List of processes in THREAD_READY state, that is, processes
+ *    that are ready to run but not actually running. */
+struct list ready_list;
+
 /* Thread identifier type.
    You can redefine this to whatever type you like. */
+
+
 typedef int tid_t;
 #define TID_ERROR ((tid_t) -1)          /* Error value for tid_t. */
 

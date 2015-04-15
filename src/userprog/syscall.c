@@ -54,7 +54,9 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_CREATE:
 		isUseraddr(f->esp,2,1);
 		
+  		lock_acquire(&sys_lock);
 		f->eax = filesys_create( *(char **)(f->esp+4), *(off_t *)(f->esp+8));
+  		lock_release(&sys_lock);
 		break;
 
 	// void exit (int status)
@@ -198,6 +200,33 @@ syscall_handler (struct intr_frame *f UNUSED)
 		
 		break;
 
+	// void close (int fd)
+	case SYS_CLOSE:
+		isUseraddr(f->esp,1,0);
+		fd = *(int*)(f->esp+4);
+
+		file = fd2file(fd);
+
+		enum intr_level old_level = intr_disable ();
+		list_remove(&file->elem);
+		intr_set_level (old_level);
+
+		file_close(file);
+		break;
+
+	case SYS_TELL:
+		isUseraddr(f->esp,1,0);
+		fd = *(int*)(f->esp+4);
+
+		file = fd2file(fd);
+
+		f->eax = file_tell(file);
+		break;
+
+	case SYS_HALT:
+		power_off();
+		break;
+
 
    }
 }
@@ -211,12 +240,14 @@ isUseraddr(void *esp, int argnum, int pointer_index)
 		sys_exit(-1);
 	if(pointer_index>0)
 	{
-		uint32_t temp= *(uint32_t*)(esp+pointer_index*4);
-		if(temp > (uint32_t) PHYS_BASE)
+		char **temp= (char**)(esp+pointer_index*4);
+
+		if((uint32_t)*temp >= (uint32_t) PHYS_BASE)
+		//if((uint32_t)*temp >= 0xC0000000)
 			sys_exit(-1);
 
 		//char pointer valid check
-		if(!pagedir_get_page(curr->pagedir, temp))
+		if(!pagedir_get_page(curr->pagedir, *temp))
         	sys_exit(-1);
 	}
 
