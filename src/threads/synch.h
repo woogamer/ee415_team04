@@ -11,6 +11,12 @@ struct semaphore
     struct list waiters;        /* List of waiting threads. */
   };
 
+struct sema_char{
+	struct semaphore sema;
+	char *file_name;
+	bool success;
+};
+
 void sema_init (struct semaphore *, unsigned value);
 void sema_down (struct semaphore *);
 bool sema_try_down (struct semaphore *);

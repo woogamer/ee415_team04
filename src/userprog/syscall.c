@@ -33,56 +33,45 @@ syscall_handler (struct intr_frame *f UNUSED)
 	char ** temp;
 
   //printf("Systellcall handler called!: %d\n",*(int *)f->esp);
-
+  
+  isUseraddr(f->esp,0,0);
+  if(!pagedir_get_page(curr->pagedir, f->esp))
+	  sys_exit(-1);
   int sys_num = *(int *)(f->esp);
   switch(sys_num)
   {
 	// pid_t exec (const char *file)
 	case SYS_EXEC:
-		isUseraddr(f->esp,1);
+		isUseraddr(f->esp,1,1);
 		if(*(char **)(f->esp + 4) == NULL){
 			/* TODO: fill something here. */
 		}
 
- 		//char pointer valid check
-                temp=(char**) (f->esp+4);
-                if(!pagedir_get_page(curr->pagedir, *temp))
-                sys_exit(-1);
-		f->eax = process_execute( *(char **)(f->esp + 4));
+ 		f->eax = process_execute( *(char **)(f->esp + 4));
 		break;
 	
 	//bool create (const char *file, unsigned initial_size)
 	case SYS_CREATE:
-		isUseraddr(f->esp,2);
+		isUseraddr(f->esp,2,1);
 		
-		//char pointer valid check
-                temp=(char**) (f->esp+4);
-                if(!pagedir_get_page(curr->pagedir, *temp))
-                sys_exit(-1);
-
 		f->eax = filesys_create( *(char **)(f->esp+4), *(off_t *)(f->esp+8));
 		break;
 
 	// void exit (int status)
 	case SYS_EXIT:
-		isUseraddr(f->esp,1);
+		isUseraddr(f->esp,1,0);
 		sys_exit(*(int *)(f->esp+4));
 		break;
 
 	//int read (int fd, void *buffer, unsigned size)
 	case SYS_READ:
-		isUseraddr(f->esp,3);
+		isUseraddr(f->esp,3,2);
   		lock_acquire(&sys_lock);
 
 		fd = *(int*)(f->esp+4);
 		buffer = *(char**)(f->esp+8);	
 		length = *(int*)(f->esp+12);
-
-		//char pointer valid check
-                temp=(char**) (f->esp+8);
-                if(!pagedir_get_page(curr->pagedir, *temp))
-                sys_exit(-1);
-
+		
 		/* read from the keyboard*/
 		if(fd == 0){
 			/* TODO: fill something here. */
@@ -110,7 +99,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	//int filesize (int fd)
 	case SYS_FILESIZE:
-		isUseraddr(f->esp,1);
+		isUseraddr(f->esp,1,0);
   		lock_acquire(&sys_lock);
 		fd = *(int *)(f->esp + 4);
 
@@ -137,7 +126,7 @@ syscall_handler (struct intr_frame *f UNUSED)
   // case 3
   // int wait (tid_t tid)
 	case SYS_WAIT:
-		isUseraddr(f->esp,1);
+		isUseraddr(f->esp,1,0);
 		tid_t pid = *(tid_t*)(f->esp+4);
 		f->eax = process_wait(pid);
 		break;
@@ -145,13 +134,9 @@ syscall_handler (struct intr_frame *f UNUSED)
   // case 6
   // int open (const char * file)
   	case SYS_OPEN:
-  		isUseraddr(f->esp,1);
+  		isUseraddr(f->esp,1,1);
   		lock_acquire(&sys_lock);
   
-		//char pointer valid check
-                temp=(char**) (f->esp+4);
-                if(!pagedir_get_page(curr->pagedir, *temp))
-                sys_exit(-1);
 
   		char * name = *(char **)(f->esp+4);
 		file = filesys_open(name);
@@ -172,17 +157,12 @@ syscall_handler (struct intr_frame *f UNUSED)
   // case 9
   // int write (int fd, const void *buffer, unsigned length);
 	case SYS_WRITE:
-		isUseraddr(f->esp,3);
+		isUseraddr(f->esp,3,2);
 		lock_acquire(&sys_lock);
 
 		fd = *(int*)(f->esp+4);
 		buffer = *(char**)(f->esp+8);	
 		length = *(int*)(f->esp+12);
-
-		//char pointer valid check
-                temp=(char**) (f->esp+8);
-                if(!pagedir_get_page(curr->pagedir, *temp))
-                sys_exit(-1);
 
 		/*stdin case*/  
 		if(fd == 0)
@@ -209,7 +189,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 	//void seek (int fd, unsigned position)
 	case SYS_SEEK:
-		isUseraddr(f->esp,2);
+		isUseraddr(f->esp,2,0);
 		fd = *(int*)(f->esp+4);
 		position = *(unsigned*)(f->esp+8);
 
@@ -225,10 +205,21 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 
 void
-isUseraddr(void *esp, int argnum)
+isUseraddr(void *esp, int argnum, int pointer_index)
 {
-	if((uint32_t)esp+argnum*4+4 > (uint32_t) PHYS_BASE)
-	sys_exit(-1);
+	if((uint32_t)esp + 4 + argnum*4 > (uint32_t) PHYS_BASE)
+		sys_exit(-1);
+	if(pointer_index>0)
+	{
+		uint32_t temp= *(uint32_t*)(esp+pointer_index*4);
+		if(temp > (uint32_t) PHYS_BASE)
+			sys_exit(-1);
+
+		//char pointer valid check
+		if(!pagedir_get_page(curr->pagedir, temp))
+        	sys_exit(-1);
+	}
+
 	
 }
 struct file *

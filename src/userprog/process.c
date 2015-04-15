@@ -52,10 +52,21 @@ process_execute (const char *file_name)
   }
   temp[15]='\0';	  
 
+  struct sema_char *s_c = (struct sema_char *)malloc(sizeof(struct sema_char));
+  sema_init(&s_c->sema, 0);
+  s_c->file_name = fn_copy;
+
   /* Create a new thread to execute FILE_NAME. */
-  tid = thread_create (temp, PRI_DEFAULT, start_process, fn_copy);
-  if (tid == TID_ERROR)
-    palloc_free_page (fn_copy); 
+  tid = thread_create (temp, PRI_DEFAULT, start_process, s_c);
+
+  sema_down(&s_c->sema);
+
+  if(!s_c->success)
+	tid = TID_ERROR;
+  //if (tid == TID_ERROR)
+  //  palloc_free_page (fn_copy); 
+
+  free(s_c);
   return tid;
 }
 
@@ -64,7 +75,9 @@ process_execute (const char *file_name)
 static void
 start_process (void *f_name)
 {
-  char *file_name = f_name;
+  struct sema_char *s_c = (struct sema_char *)f_name;
+  char *file_name = s_c->file_name;
+
   struct intr_frame if_;
   bool success;
 
@@ -74,12 +87,18 @@ start_process (void *f_name)
   if_.cs = SEL_UCSEG;
   if_.eflags = FLAG_IF | FLAG_MBS;
   success = load (file_name, &if_.eip, &if_.esp);
+  s_c->success = success;
 
   /* If load failed, quit. */
-  palloc_free_page (file_name);
-  if (!success) 
-    thread_exit ();
 
+  if (!success){
+	palloc_free_page (file_name);
+	sema_up(&s_c->sema);
+    //thread_exit ();
+    sys_exit(-1);
+  }
+
+  sema_up(&s_c->sema);
   /* Start the user process by simulating a return from an
      interrupt, implemented by intr_exit (in
      threads/intr-stubs.S).  Because intr_exit takes all of its
@@ -102,10 +121,14 @@ start_process (void *f_name)
 int
 process_wait (tid_t child_tid) 
 {
+	int status;
 	int realchild = 0;
   	struct thread * curr = thread_current();
 	struct thread * child = NULL;
 	struct list_elem *find;
+
+	if(child_tid == TID_ERROR)
+		return -1;
 
 	enum intr_level old_level;
 	old_level = intr_disable ();
@@ -118,7 +141,9 @@ process_wait (tid_t child_tid)
 			struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
 			if(temp->tid == child_tid){
 				list_remove(find);
-				return temp->exit_status;
+				status = temp->exit_status;
+				free(temp);
+				return status;
 			}
 		}
 	}
@@ -145,7 +170,9 @@ process_wait (tid_t child_tid)
 		/* return -1 */
 		return -1;
 	}else{
+		//printf("Parent is going to wait for termination of the child.\n");
 		sema_down(&child->exit_sema);
+		//printf("The child has been terminated.\n");
 
 		/* When it reaches here, the child has called exit() by itself. */
 
@@ -158,7 +185,9 @@ process_wait (tid_t child_tid)
             struct terminated_proc_info *temp = list_entry(find, struct terminated_proc_info, terminated_elem);
             if(temp->tid == child_tid){
 				list_remove(find);
-                return temp->exit_status;
+				status = temp->exit_status;
+				free(temp);
+                return status;
             }
         }
 		intr_set_level (old_level);
@@ -649,6 +678,17 @@ void sys_exit(int status){
 	terminated_info->tid = curr->tid;
 
 	list_push_back(&parent->terminated_child_list, &terminated_info->terminated_elem);	
+
+	struct list_elem *find;
+	for(find = list_begin(&curr->fd_list);	
+		find != list_end(&curr->fd_list);
+		find = list_next(find))
+	{
+		struct file *temp = list_entry(find, struct file, elem);
+		find = list_remove(find);
+		find = list_prev(find);
+		free(temp);
+	}
 	
 	intr_set_level (old_level);
 
