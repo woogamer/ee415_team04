@@ -22,7 +22,6 @@
 
 static thread_func start_process NO_RETURN;
 static bool load (const char *cmdline, void (**eip) (void), void **esp);
-void sys_exit(int status);
 
 /* Starts a new thread running a user program loaded from
    FILENAME.  The new thread may be scheduled (and may even exit)
@@ -451,6 +450,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   {
 	
 	size_token= strlen(token)+1;
+	
+  	if((PHYS_BASE-*esp-4)<4000)
 	*esp = *esp - size_token;
 	memcpy(*esp, token, size_token);
 	
@@ -463,6 +464,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   for(i=0; i<align; i++)
   {
 	zero= zero-(size_t)1;
+	
+  	if((PHYS_BASE-*esp-4)<4000)
 	*esp= *esp-(size_t)1; 
 	*zero=0;
   }
@@ -472,6 +475,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   for(i=0; i<4; i++)
   {
 	zero= zero-(size_t)1;
+
+  	if((PHYS_BASE-*esp-4)<4000)
 	*esp= *esp-(size_t)1; 
 	*zero=0;
   }  
@@ -486,7 +491,8 @@ load (const char *file_name, void (**eip) (void), void **esp)
   }
   while(true)
   {
-		
+
+  	if((PHYS_BASE-*esp-4)<4000)
 	*esp = *esp -(size_t) 4;
         address=find;
 	memcpy(*esp, &address, 4);
@@ -502,18 +508,24 @@ load (const char *file_name, void (**eip) (void), void **esp)
   }
 
   int argv_start=*esp;
+  
+  if((PHYS_BASE-*esp-4)<4000)
   *esp = *esp -(size_t) 4;
   memcpy(*esp, &argv_start, 4);
- 
+
+
+  if((PHYS_BASE-*esp-4)<4000)
   *esp = *esp -(size_t) 4;
   memcpy(*esp,(char*) &num_token, 4);
   zero=*esp;
   for(i=0; i<4; i++)
   {
 	zero= zero-(size_t)1;
+  	if((PHYS_BASE-*esp-4)<4000)
 	*esp= *esp-(size_t)1; 
 	*zero=0;
   }
+
   
   
   	

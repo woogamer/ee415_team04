@@ -7,6 +7,11 @@
 #include "threads/synch.h"
 #include "filesys/file.h"
 #include "filesys/filesys.h"
+#include "userprog/process.h"
+#include "threads/init.h"
+#include "devices/input.h"
+#include "userprog/pagedir.h"
+
 
 static void syscall_handler (struct intr_frame *);
 struct thread * curr;
@@ -24,14 +29,12 @@ syscall_handler (struct intr_frame *f UNUSED)
   curr = thread_current();
 
   /* Variables uesd by system calls of several kinds*/
-    struct thread * parent;
 	int fd;
 	char *buffer;
 	int length;
 	struct list_elem *find;
 	struct file *file;
 	unsigned position;
-	char ** temp;
 
   /* Check the address of esp */
   isUseraddr(f->esp,0,0);
@@ -76,19 +79,41 @@ syscall_handler (struct intr_frame *f UNUSED)
 		buffer = *(char**)(f->esp+8);	
 		length = *(int*)(f->esp+12);
 		
-		/* read from the keyboard*/
+		/* stdin case*/
 		if(fd == 0){
-			f->eax = input_getc();
-		}else{
+			int i = 0;
+
+			uint8_t returnc;
+			/* read untill null character appears or length is done*/
+			while(i < length){
+			returnc = input_getc();
+			if(returnc=='\n')
+			break;
+			buffer[i++]=returnc;
+			}
+			f->eax = i;
+
+		}
+		/* stdout in case*/
+		else if(fd ==1)
+		f->eax = -1;
+		/* normal case read from file*/
+		else{
+			file=NULL;
+			bool suc=false;
 			for(find = list_begin(&curr->fd_list);
 			find != list_end(&curr->fd_list);
 			find = list_next(find))
 			{
 				file = list_entry(find, struct file, elem);
 				if(file->fd == fd)
+				{
+					suc=true;
 					break;
+				}
+				
 			}
-			if(file == NULL){
+			if(suc==false){
 				lock_release(&sys_lock);
 				f->eax = -1;
 				break;
@@ -105,7 +130,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 		isUseraddr(f->esp,1,0);
   		lock_acquire(&sys_lock);
 		fd = *(int *)(f->esp + 4);
-
+		
+		/* find file from fd_list*/	
 		for(find = list_begin(&curr->fd_list);
 		find != list_end(&curr->fd_list);
 		find = list_next(find))
@@ -115,8 +141,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 				break;
 		}
 		if(file == NULL){
-			/* TODO: fill something here. */
 			lock_release(&sys_lock);
+			f->eax = -1;
 			break;
 		}
 		
@@ -146,9 +172,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 			f->eax = -1;
 		else
 		{
+			/* assgin fd_num*/
 			f->eax = curr->fd_num;
 			file->fd= curr->fd_num;
 			curr->fd_num++;
+
+			/* push fd information to thread*/
 			list_push_back(&curr->fd_list, &file->elem);
 		}
 		lock_release(&sys_lock);
@@ -174,6 +203,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 			putbuf(buffer, length);
 			f->eax=length;
 		}
+		/*normal case write from file*/
 		else
 		{
 			file = fd2file(fd);
@@ -231,13 +261,15 @@ syscall_handler (struct intr_frame *f UNUSED)
 }
 
 
-
+//check that the address is user address and check it is valid address
 void
 isUseraddr(void *esp, int argnum, int pointer_index)
 {
+	//check it is user address 
 	if((uint32_t)esp + 4 + argnum*4 > (uint32_t) PHYS_BASE)
-		sys_exit(-1);
+	sys_exit(-1);
 
+	//check the pointer address is valid
 	if(pointer_index > 0)
 	{
 		char **temp= (char**)(esp+pointer_index*4);
@@ -252,6 +284,7 @@ isUseraddr(void *esp, int argnum, int pointer_index)
 
 	
 }
+//change fd to file pointer
 struct file *
 fd2file(int fd)
 {
