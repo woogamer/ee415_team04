@@ -22,8 +22,9 @@ syscall_handler (struct intr_frame *f UNUSED)
   struct lock sys_lock;
   lock_init(&sys_lock);
   curr = thread_current();
-  struct thread * parent;
 
+  /* Variables uesd by system calls of several kinds*/
+    struct thread * parent;
 	int fd;
 	char *buffer;
 	int length;
@@ -32,11 +33,11 @@ syscall_handler (struct intr_frame *f UNUSED)
 	unsigned position;
 	char ** temp;
 
-  //printf("Systellcall handler called!: %d\n",*(int *)f->esp);
-  
+  /* Check the address of esp */
   isUseraddr(f->esp,0,0);
   if(!pagedir_get_page(curr->pagedir, f->esp))
 	  sys_exit(-1);
+
   int sys_num = *(int *)(f->esp);
   switch(sys_num)
   {
@@ -44,7 +45,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_EXEC:
 		isUseraddr(f->esp,1,1);
 		if(*(char **)(f->esp + 4) == NULL){
-			/* TODO: fill something here. */
+			f->eax = TID_ERROR;
+			break;
 		}
 
  		f->eax = process_execute( *(char **)(f->esp + 4));
@@ -76,8 +78,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 		
 		/* read from the keyboard*/
 		if(fd == 0){
-			/* TODO: fill something here. */
-			//f->eax = input_getc();
+			f->eax = input_getc();
 		}else{
 			for(find = list_begin(&curr->fd_list);
 			find != list_end(&curr->fd_list);
@@ -88,8 +89,8 @@ syscall_handler (struct intr_frame *f UNUSED)
 					break;
 			}
 			if(file == NULL){
-				/* TODO: fill something here. */
 				lock_release(&sys_lock);
+				f->eax = -1;
 				break;
 			}
 			
@@ -125,16 +126,14 @@ syscall_handler (struct intr_frame *f UNUSED)
 		lock_release(&sys_lock);
 		break;
 
-  // case 3
-  // int wait (tid_t tid)
+    // int wait (tid_t tid)
 	case SYS_WAIT:
 		isUseraddr(f->esp,1,0);
 		tid_t pid = *(tid_t*)(f->esp+4);
 		f->eax = process_wait(pid);
 		break;
 
-  // case 6
-  // int open (const char * file)
+    // int open (const char * file)
   	case SYS_OPEN:
   		isUseraddr(f->esp,1,1);
   		lock_acquire(&sys_lock);
@@ -156,8 +155,7 @@ syscall_handler (struct intr_frame *f UNUSED)
 		break;
 		
   
-  // case 9
-  // int write (int fd, const void *buffer, unsigned length);
+    // int write (int fd, const void *buffer, unsigned length);
 	case SYS_WRITE:
 		isUseraddr(f->esp,3,2);
 		lock_acquire(&sys_lock);
@@ -207,10 +205,12 @@ syscall_handler (struct intr_frame *f UNUSED)
 
 		file = fd2file(fd);
 
+		/* Remove the elem of the file in the fd_list of the thread */
 		enum intr_level old_level = intr_disable ();
 		list_remove(&file->elem);
 		intr_set_level (old_level);
 
+		/* Close the file */
 		file_close(file);
 		break;
 
@@ -227,7 +227,6 @@ syscall_handler (struct intr_frame *f UNUSED)
 		power_off();
 		break;
 
-
    }
 }
 
@@ -238,15 +237,15 @@ isUseraddr(void *esp, int argnum, int pointer_index)
 {
 	if((uint32_t)esp + 4 + argnum*4 > (uint32_t) PHYS_BASE)
 		sys_exit(-1);
-	if(pointer_index>0)
+
+	if(pointer_index > 0)
 	{
 		char **temp= (char**)(esp+pointer_index*4);
 
 		if((uint32_t)*temp >= (uint32_t) PHYS_BASE)
-		//if((uint32_t)*temp >= 0xC0000000)
 			sys_exit(-1);
 
-		//char pointer valid check
+		// char pointer validation check
 		if(!pagedir_get_page(curr->pagedir, *temp))
         	sys_exit(-1);
 	}
@@ -257,17 +256,16 @@ struct file *
 fd2file(int fd)
 {
 	struct list_elem *find;
-        for(find = list_begin(&curr->fd_list);
-            find != list_end(&curr->fd_list);
-            find = list_next(find))
-            {
+	for(find = list_begin(&curr->fd_list);
+		find != list_end(&curr->fd_list);
+		find = list_next(find))
+	{
 		struct file * f = list_entry(find, struct file, elem);
 		
 		if(fd== f->fd)
 		return f;
-	
+	}
 
-	    }
 	//can not find fd
 	return 0;
 }

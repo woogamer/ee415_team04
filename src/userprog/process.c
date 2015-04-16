@@ -40,6 +40,7 @@ process_execute (const char *file_name)
   if (fn_copy == NULL)
     return TID_ERROR;
   strlcpy (fn_copy, file_name, PGSIZE);
+
   /* thread name size <= 16
    * therefore when thread_create call, the name of thread should not contain arguments */
   char temp[16];
@@ -53,29 +54,29 @@ process_execute (const char *file_name)
   }
   temp[15]='\0';	  
 
+  /* The purpose of the sema_char structure below is */ 
+  /*  to check success of failure of loading execution file by child.  */
   struct sema_char *s_c = (struct sema_char *)malloc(sizeof(struct sema_char));
   sema_init(&s_c->sema, 0);
   s_c->file_name = fn_copy;
 
-  //printf("Thread will become created. %s\n", fn_copy);
   /* Create a new thread to execute FILE_NAME. */
   tid = thread_create (temp, PRI_DEFAULT, start_process, s_c);
 
+  /* When it fails because of some fails(e.g., fail to obtain a free page), it returns -1.*/
   if (tid == TID_ERROR){
 	  free(s_c);
       palloc_free_page (fn_copy); 
 	  return tid;
   }
  
+  /* To check whether the child process loads the execution file successfully or not. */
   sema_down(&s_c->sema);
-  //printf("Thread will be running. %s\n", fn_copy);
 
+  /* If the child process fails to load, it returns -1. */
   if(!s_c->success){
-	//printf("This thread is failed.\n");
 	tid = TID_ERROR;
   }
-  //if (tid == TID_ERROR)
-  //  palloc_free_page (fn_copy); 
 
   free(s_c);
   return tid;
@@ -88,7 +89,6 @@ start_process (void *f_name)
 {
   struct sema_char *s_c = (struct sema_char *)f_name;
   char *file_name = s_c->file_name;
-  //printf("Start process %s\n", file_name);
 
   struct intr_frame if_;
   bool success;
@@ -101,13 +101,11 @@ start_process (void *f_name)
   success = load (file_name, &if_.eip, &if_.esp);
   s_c->success = success;
 
-  /* If load failed, quit. */
   palloc_free_page (file_name);
   sema_up(&s_c->sema);
 
+  /* If the load failed, it quits this process. */
   if (!success){
-	//sema_up(&s_c->sema);
-    //thread_exit ();
     sys_exit(-1);
   }
 
@@ -144,6 +142,7 @@ process_wait (tid_t child_tid)
 
 	enum intr_level old_level;
 	old_level = intr_disable ();
+
 	/* If child_tid has already been terminated, wait() returns its exit status. */
 	if(!list_empty(&curr->terminated_child_list)){
 		for(find = list_begin(&curr->terminated_child_list);
@@ -154,6 +153,9 @@ process_wait (tid_t child_tid)
 			if(temp->tid == child_tid){
 				list_remove(find);
 				status = temp->exit_status;
+
+				/* If a parent process waits a same child twice, it should return -1. */
+				/* To do this, it frees the temp information. */
 				free(temp);
 				return status;
 			}
@@ -173,7 +175,6 @@ process_wait (tid_t child_tid)
 			}
 		}
 	}
-
 	intr_set_level (old_level);
 
 	/* If child_tid does not exist in the child list, then*/
@@ -182,13 +183,10 @@ process_wait (tid_t child_tid)
 		/* return -1 */
 		return -1;
 	}else{
-		//printf("Parent is going to wait for termination of the child.\n");
 		sema_down(&child->exit_sema);
-		//printf("The child has been terminated.\n");
-
 		/* When it reaches here, the child has called exit() by itself. */
 
-		/* When the child calls exit(), the elem of the child is in the terminated list of the parent. */
+		/* When the child calls exit(), the elem of the child is moved to the terminated list of the parent. */
 		old_level = intr_disable ();
 		for(find = list_begin(&curr->terminated_child_list);
             find != list_end(&curr->terminated_child_list);
@@ -206,7 +204,7 @@ process_wait (tid_t child_tid)
 	}
 
 	/* Never reached */
-	return -1;
+	NOT_REACHED ();
 }
 
 /* Free the current process's resources. */
@@ -685,12 +683,16 @@ void sys_exit(int status){
 	enum intr_level old_level = intr_disable ();
 
 	list_remove(&curr->child_elem);
-	struct terminated_proc_info *terminated_info = malloc(sizeof(struct terminated_proc_info));
-	terminated_info->exit_status = status;
-	terminated_info->tid = curr->tid;
 
+	/* Leave the small information for the terminated process  */
+	struct terminated_proc_info *terminated_info = malloc(sizeof(struct terminated_proc_info));
+	terminated_info->exit_status = status; /* exit status */
+	terminated_info->tid = curr->tid;      /* tid of the terminated process */
+
+	/* Keep the information into the term_list of the parent process */
 	list_push_back(&parent->terminated_child_list, &terminated_info->terminated_elem);	
 
+	/* Remove all file opened by the process */
 	struct list_elem *find;
 	if(!list_empty(&curr->fd_list)){
 		for(find = list_begin(&curr->fd_list);	
@@ -704,8 +706,7 @@ void sys_exit(int status){
 		}
 	}
 
-	//printf("Removing the terminate list...\n");
-#if 1
+	/* Free all the information of the terminated childs */
 	if(!list_empty(&curr->terminated_child_list)){
 		for(find = list_begin(&curr->terminated_child_list);	
 			find != list_end(&curr->terminated_child_list);
@@ -717,15 +718,17 @@ void sys_exit(int status){
 			free(temp);
 		}
 	}
-#endif
+
 	printf("%s: exit(%d)\n",  curr->name, status);
-	//printf("%s: exit(%d) Terminated child: %s Ready list size: %d \n", curr->name, status,
-	//		 list_empty(&curr->terminated_child_list)?"SUCC":"FAIL",
-	//		 list_size(&ready_list)
-	//	  );
 	intr_set_level (old_level);
 
+	/* The parent process could wait for the child to be terminated by trying to down a semaphore.  */
+	/* When a process terminates, it should up the semaphore to free the waiting parent. */
 	sema_up(&curr->exit_sema);
+
+	/* And also, it should close the execution file. (binary file)  */
 	file_close(curr->exec_file);
+
+	/* Finally, it changes the process(thread) status and destroy the page. */
 	thread_exit();
 }
