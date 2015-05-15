@@ -1,0 +1,30 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.7	//
+DEPENDS	build/Makefile	/^DEPENDS = $(patsubst %.o,%.d,$(OBJECTS))$/;"	m
+FT	FT.h	/^struct list FT;$/;"	v	typeref:struct:list
+FTE	FT.h	/^struct FTE$/;"	s
+FTE_elem	FT.h	/^	struct list_elem FTE_elem; \/\/Frame Table Elem$/;"	m	struct:FTE	typeref:struct:FTE::list_elem
+F_alloc	FT.c	/^uint8_t * F_alloc(uint8_t * VMP, enum palloc_flags flag)$/;"	f
+F_lock	FT.h	/^struct lock F_lock;$/;"	v	typeref:struct:lock
+OBJECTS	build/Makefile	/^OBJECTS = $(patsubst %.c,%.o,$(patsubst %.S,%.o,$(SOURCES)))$/;"	m
+PMP	FT.h	/^	uint8_t * PMP;		\/\/physical memory page$/;"	m	struct:FTE
+SOURCES	build/Makefile	/^SOURCES = $(foreach dir,$(KERNEL_SUBDIRS),$($(dir)_SRC))$/;"	m
+SRCDIR	build/Makefile	/^SRCDIR = ..\/..$/;"	m
+VMP	FT.h	/^	uint8_t * VMP;		\/\/virtual memory page$/;"	m	struct:FTE
+_end	build/threads/kernel.lds.s	/^  _end = .;$/;"	d
+_end_bss	build/threads/kernel.lds.s	/^  _end_bss = .;$/;"	d
+_end_kernel_text	build/threads/kernel.lds.s	/^       _end_kernel_text = .; }$/;"	d
+_start	build/threads/kernel.lds.s	/^  _start = .;$/;"	d
+_start_bss	build/threads/kernel.lds.s	/^  _start_bss = .;$/;"	d
+devices_SRC	build/Makefile	/^devices_SRC  = devices\/timer.c		# Timer device.$/;"	m
+filesys_SRC	build/Makefile	/^filesys_SRC  = filesys\/filesys.c	# Filesystem core.$/;"	m
+init_FT	FT.c	/^void init_FT()$/;"	f
+kernel_SRC	build/Makefile	/^lib\/kernel_SRC  = lib\/kernel\/debug.c	# Debug helpers.$/;"	m
+lib_SRC	build/Makefile	/^lib_SRC  = lib\/debug.c			# Debug helpers.$/;"	m
+t	FT.h	/^	struct thread * t;		\/\/thread id$/;"	m	struct:FTE	typeref:struct:FTE::thread
+threads_SRC	build/Makefile	/^threads_SRC  = threads\/init.c		# Main program.$/;"	m
+userprog_SRC	build/Makefile	/^userprog_SRC  = userprog\/process.c	# Process loading.$/;"	m
