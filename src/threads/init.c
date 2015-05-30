@@ -33,6 +33,7 @@
 #include "devices/disk.h"
 #include "filesys/filesys.h"
 #include "filesys/fsutil.h"
+#include "vm/FT.h"
 #endif
 
 /* Amount of physical memory, in 4 kB pages. */
@@ -115,15 +116,17 @@ main (void)
   filesys_init (format_filesys);
 #endif
 
+  init_vm();
   printf ("Boot complete.\n");
   
   /* Run actions specified on kernel command line. */
   run_actions (argv);
-
   /* Finish up. */
   if (power_off_when_done)
     power_off ();
+
   thread_exit ();
+
 }
 
 /* Clear BSS and obtain RAM size from loader. */
@@ -163,8 +166,12 @@ paging_init (void)
   pt = NULL;
   for (page = 0; page < ram_pages; page++) 
     {
+
       uintptr_t paddr = page * PGSIZE;
       char *vaddr = ptov (paddr);
+  ASSERT(vaddr!=0x5a5a5000);
+  //printf("----------------------page= %p\n", vaddr);
+ 
       size_t pde_idx = pd_no (vaddr);
       size_t pte_idx = pt_no (vaddr);
       bool in_kernel_text = &_start <= vaddr && vaddr < &_end_kernel_text;

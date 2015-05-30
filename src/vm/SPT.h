@@ -28,6 +28,6 @@ struct SPTE
 
 void init_SPT(struct thread * t);
 void push_SPT(struct FTE * fte);
-struct SPTE * find_SPT(uint8_t * VMP);
+struct SPTE * find_SPT(struct thread *t, uint8_t *VMP);
 
 #endif

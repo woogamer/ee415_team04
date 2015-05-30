@@ -105,7 +105,8 @@ palloc_get_multiple (enum palloc_flags flags, size_t page_cnt)
       if (flags & PAL_ASSERT)
         PANIC ("palloc_get: out of pages");
     }
-
+  ASSERT(pages!=0x5a5a5000);
+  //printf("----------------------page= %p\n", pages);
   //printf("Getting pages has been successful. %p\n", pages);
   return pages;
 }

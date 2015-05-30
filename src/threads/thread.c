@@ -15,6 +15,7 @@
 #ifdef USERPROG
 #include "userprog/process.h"
 #include <string.h>
+#include "vm/SPT.h"
 #endif
 
 /* Random value for struct thread's `magic' member.
@@ -101,7 +102,6 @@ thread_init (void)
   list_init (&sleep_list);
   list_init (&ready_list);
   list_init (&block_list);
-
   if(thread_mlfqs)
 	  load=0; 
 
@@ -111,7 +111,8 @@ thread_init (void)
   init_thread (initial_thread, "main", PRI_DEFAULT);
   initial_thread->status = THREAD_RUNNING;
   initial_thread->tid = allocate_tid ();
-}
+
+  }
 
 /* Starts preemptive thread scheduling by enabling interrupts.
    Also creates the idle thread. */
@@ -191,7 +192,6 @@ thread_create (const char *name, int priority,
   /* Allocate thread. */
   t = palloc_get_page (PAL_ZERO);
   if (t == NULL){
-	printf("");
     return TID_ERROR;
   }
 
@@ -225,6 +225,11 @@ thread_create (const char *name, int priority,
 
   /* Keep the information of the parent process into the child process structure */
   t->parent = thread_current();
+  
+
+  //initialize Supplemental page table
+  init_SPT(t);
+  printf("thread create tid = %d\n", t->tid);
 
   /* Add to run queue. */
   thread_unblock (t);
@@ -354,8 +359,11 @@ thread_exit (void)
   /* Just set our status to dying and schedule another process.
      We will be destroyed during the call to schedule_tail(). */
   intr_disable ();
+
   thread_current ()->status = THREAD_DYING;
+
   schedule ();
+
   NOT_REACHED ();
 }
 
@@ -464,6 +472,7 @@ get_priority(struct thread *target){
 		return max;
 	}
   }
+	return -1;
 }
 
 /* Returns the current thread's priority. */

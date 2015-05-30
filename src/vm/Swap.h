@@ -31,4 +31,5 @@ uint8_t * evict(void);
 size_t disk_in(struct FTE * victim);
 void disk_out(struct thread * t, uint8_t * VMP, uint8_t *PMP);
 struct SWTE * disk_find(struct thread *t, uint8_t *VMP);
+void delete_SWT(void);
 #endif

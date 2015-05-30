@@ -5,7 +5,7 @@
 #include "tests/arc4.h"
 #include "tests/lib.h"
 #include "tests/main.h"
-
+#include <stdio.h>
 #define SIZE (2 * 1024 * 1024)
 
 static char buf[SIZE];
@@ -13,13 +13,16 @@ static char buf[SIZE];
 void
 test_main (void)
 {
+
   struct arc4 arc4;
   size_t i;
-
   /* Initialize to 0x5a. */
   msg ("initialize");
+//  printf("Before Memset\n");
   memset (buf, 0x5a, sizeof buf);
+//  printf("After Memset\n");
 
+ // printf("----------------------------------  \n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
   /* Check that it's all 0x5a. */
   msg ("read pass");
   for (i = 0; i < SIZE; i++)

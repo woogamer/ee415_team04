@@ -24,5 +24,5 @@ struct FTE
 void init_vm(void);
 void init_FT(void);
 uint8_t * F_alloc(uint8_t * VMP, enum palloc_flags flag);
-
+void delete_FT(void);
 #endif

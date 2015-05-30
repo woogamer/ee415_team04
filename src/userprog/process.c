@@ -226,11 +226,11 @@ process_exit (void)
   printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
   if(!lock_held_by_current_thread(&F_lock))  
   {
-	printf("sadfaafds");
+	printf("flock gogo\n");
 	lock_acquire(&F_lock);
   }
   printf("222222");
-
+/*
   printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzsys EXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
   if(!lock_held_by_current_thread(&sys_lock))  
   {
@@ -238,16 +238,16 @@ process_exit (void)
 	lock_acquire(&sys_lock);
   }
   printf("333333");
-
+*/
 
   delete_FT();
-printf("1\n");
+printf("delete_FT\n");
   delete_SWT();
 
-printf("2\n");
+printf("Delete_SWT\n");
   delete_SPT();
 
-  printf("11111111111f");
+  printf("DELETE_SPT\n");
   lock_release(&F_lock);
   printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d\n\n\n",curr->tid);
   /* Destroy the current process's page directory and switch back
@@ -693,14 +693,14 @@ printf("7");
 	if(F_lock.holder!=NULL)
 	printf("load segment F_lock  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
 	else
-	printf("holder is NULL\n\n\n\n\n");
+	printf("holder is acquire START NULL\n\n\n\n\n");
 	lock_acquire(&F_lock);
 
 
 	if(F_lock.holder!=NULL)
 	printf("load segment F_lock END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
 	else
-	printf("holder is NULL\n\n\n\n\n");
+	printf("holder is acuire END NULL\n\n\n\n\n");
 	
 
 
@@ -714,11 +714,16 @@ printf("9");
 	
 	if(F_lock.holder!=NULL)
 	printf("load segment release  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+	else
+	printf("holder is release Start  NULL\n\n\n\n\n");
+	
 	lock_release(&F_lock);
 
 	if(F_lock.holder!=NULL)
 	printf("load segment release END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
-
+	else
+	printf("holder is release END NULL\n\n\n\n\n");
+	
 
 printf("aaa");
       if (kpage == NULL)

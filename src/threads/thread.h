@@ -107,7 +107,10 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
- 
+    struct list SPT;			/* Supplement Table*/
+
+
+
     struct list_elem child_elem;		/* Fof child_list*/
 
     struct list child_list;				/* List of child threads */
