@@ -4,12 +4,25 @@
 #include "userprog/gdt.h"
 #include "threads/interrupt.h"
 #include "threads/thread.h"
+#include "userprog/syscall.h"
+#include "threads/vaddr.h"
+#include "threads/palloc.h"
+#include "userprog/process.h"
+#include "vm/Swap.h"
+#include "vm/SPT.h"
+#include "vm/FT.h"
+#include "userprog/pagedir.h"
+#include "threads/malloc.h"
+
 
 /* Number of page faults processed. */
 static long long page_fault_cnt;
 
 static void kill (struct intr_frame *);
 static void page_fault (struct intr_frame *);
+static bool setup_page(struct intr_frame *, void * fault_addr);
+static bool install_page (void *upage, void *kpage, bool writable);
+
 
 /* Registers handlers for interrupts that can be caused by user
    programs.
@@ -121,9 +134,47 @@ kill (struct intr_frame *f)
    can find more information about both of these in the
    description of "Interrupt 14--Page Fault Exception (#PF)" in
    [IA32-v3a] section 5.15 "Exception and Interrupt Reference". */
+
+static bool
+setup_page(struct intr_frame *f, void * fault_addr)
+{
+  uint8_t *kpage;
+  bool success = false;
+ // printf("setup_page %p\n", fault_addr);
+  uint8_t *next_page=pg_round_down(fault_addr);
+ // printf("setup_page\n");
+  kpage = F_alloc (next_page,PAL_USER | PAL_ZERO);
+  //kpage = palloc_get_page (PAL_USER | PAL_ZERO);
+  if (kpage != NULL)
+    {
+      success = install_page (((uint8_t *) next_page), kpage, true);
+      if (!success)
+        palloc_free_page (kpage);
+	else
+	{
+	// *(int *)(f->esp +4)=-1;
+	//ASSERT(0);
+	}
+    }
+  return success;
+}
+static bool 
+install_page (void *upage, void *kpage, bool writable)
+{
+  struct thread *t = thread_current ();
+
+  /* Verify that there's not already a page at that virtual
+ *      address, then map our page there. */
+  return (pagedir_get_page (t->pagedir, upage) == NULL
+          && pagedir_set_page (t->pagedir, upage, kpage, writable));
+}
+
 static void
 page_fault (struct intr_frame *f) 
 {
+
+struct thread *t = thread_current ();
+printf("\n\n\n\n\n\n\n\nPAGE FAULT START list_size = %d , tid = %d\n", list_size(&t->SPT), t->tid);
   bool not_present;  /* True: not-present page, false: writing r/o page. */
   bool write;        /* True: access was write, false: access was read. */
   bool user;         /* True: access by user, false: access by kernel. */
@@ -142,16 +193,138 @@ page_fault (struct intr_frame *f)
      be assured of reading CR2 before it changed). */
   intr_enable ();
 
-  /* Count page faults. */
+printf("fault_addr=%p\n",fault_addr);
+ 
+
+/* Count page faults. */
   page_fault_cnt++;
 
   /* Determine cause. */
   not_present = (f->error_code & PF_P) == 0;
   write = (f->error_code & PF_W) != 0;
   user = (f->error_code & PF_U) != 0;
-  
-  /* When a page fault occurs, the process should terminate.  */
-  if(not_present || write || user)
+
+
+t = thread_current();
+	printf("lock acquire START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+	lock_acquire(&F_lock);
+	printf("lock acquire END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
+
+
+
+//stack growth
+if(fault_addr<PHYS_BASE && ((fault_addr==f->esp+32)|| (fault_addr == f->esp +4)))
+{
+	setup_page(f,fault_addr);
+	lock_release(&F_lock);
+	printf("stack growth : %p\n",f->esp);
+	printf("%08x\n",*((int *)f->esp));
+	return ;
+}
+
+
+
+uint8_t *VMP=pg_round_down(fault_addr);
+printf("VVVVVVMP =%p\n",VMP);
+printf("FAULT_ADD =%p\n",fault_addr);
+
+/*
+struct list_elem *e;
+      for (e = list_begin (&t->SPT); e != list_end (&t->SPT);
+           e = list_next (e))
+        {
+          struct SPTE *temp = list_entry(e, struct SPTE, SPTE_elem);
+          printf(" [elem = %p, status = %d] --", temp->VMP, temp->status);
+        }
+*/
+//page_swaped
+struct SPTE * spte = find_SPT(t, VMP);
+printf("spte = %p \n", spte);
+if(spte)
+{
+	printf("before evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
+	uint8_t *PMP = F_alloc(VMP, PAL_USER | PAL_ZERO);
+	struct list_elem *e = (spte->SWTE_elem);
+	struct SWTE * swte = list_entry(e, struct SWTE, SWTE_elem);
+	printf("evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
+/*
+      for (e = list_begin (&SWT); e != list_end (&SWT);
+           e = list_next (e))
+        {
+          struct SWTE *temp = list_entry(e, struct SWTE, SWTE_elem);
+          printf(" [elem = %p] --", temp->VMP);
+        }
+*/
+  	//intr_enable ();
+	ASSERT(spte->status==1);
+	disk_out(t, VMP, PMP);
+	//pagedir update
+	pagedir_set_page(t->pagedir, VMP, PMP, true);
+	
+
+
+
+        struct list_elem * elem = &swte->SWTE_elem;
+	//printf("0\n");
+	//printf("swte->SWTE_elem = %p\n", &swte->SWTE_elem);
+	//printf("next = %p\n", &elem->next->prev);
+	//printf("prev = %p\n", &elem->prev->next);
+	//printf("head = %p\n", &SWT.head);
+	//printf("tail = %p\n", &SWT.tail);
+	//update SWT
+	//disk_out already did
+	//printf("1\n");
+	
+	//update FT
+	struct FTE * fte = list_back(&FT);
+	//update SPT
+	
+	printf("2\n");
+	spte->status=0;
+	spte->FTE_elem = &fte->FTE_elem;
+	spte->SWTE_elem =NULL;
+
+	//printf("spte-> vmp = %p\n", spte->VMP);
+/*
+for (e = list_begin (&t->SPT); e != list_end (&t->SPT);
+           e = list_next (e))
+        {
+          struct SPTE *temp = list_entry(e, struct SPTE, SPTE_elem);
+          printf(" [elem = %p, status = %d] --", temp->VMP, temp->status);
+        }
+*/	
+	printf("3\n");
+	
+	printf("lock release start tid = %d\n", t->tid);
+	lock_release(&F_lock);
+
+	printf("lock release end tid = %d\n\n\n\n", t->tid);
+
+//printf("PAGE FAULT END list_size = %d \n", list_size(&FT));
+	return ;
+}
+
+
+if(fault_addr<PHYS_BASE && (fault_addr>=f->esp))
+{
+	setup_page(f,fault_addr);
+	lock_release(&F_lock);
+	//printf("stack growth : %p\n",f->esp);
+	//printf("%08x\n",*((int *)f->esp));
+	return ;
+}
+
+	
+	printf("lock release last start tid = %d\n", t->tid);
+	lock_release(&F_lock);
+	printf("lock release last end tid = %d\n\n\n\n", t->tid);
+
+
+/* When a page fault occurs, the process should terminate.  */
+if(not_present || write || user)
+{
+	printf("not_present = %d, write =%d, user=%d, fault addr=%p tid = %d\n", not_present, write, user, fault_addr, t->tid);
+	//printf("123");
 	sys_exit(-1);
 
   /* Never reached */
@@ -168,4 +341,4 @@ page_fault (struct intr_frame *f)
 
   kill (f);
 }
-
+}

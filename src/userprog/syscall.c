@@ -268,7 +268,6 @@ isUseraddr(void *esp, int argnum, int pointer_index)
 	//check it is user address 
 	if((uint32_t)esp + 4 + argnum*4 > (uint32_t) PHYS_BASE)
 	sys_exit(-1);
-
 	//check the pointer address is valid
 	if(pointer_index > 0)
 	{
@@ -276,12 +275,13 @@ isUseraddr(void *esp, int argnum, int pointer_index)
 
 		if((uint32_t)*temp >= (uint32_t) PHYS_BASE)
 			sys_exit(-1);
-
 		// char pointer validation check
 		if(!pagedir_get_page(curr->pagedir, *temp))
-        	sys_exit(-1);
+		{
+			if(*temp>PHYS_BASE || *temp<=0)
+        		sys_exit(-1);
+		}
 	}
-
 	
 }
 //change fd to file pointer
