@@ -174,7 +174,7 @@ page_fault (struct intr_frame *f)
 {
 
 struct thread *t = thread_current ();
-printf("\n\n\n\n\n\n\n\nPAGE FAULT START list_size = %d , tid = %d\n", list_size(&t->SPT), t->tid);
+//printf("\n\n\n\n\n\n\n\nPAGE FAULT START list_size = %d , tid = %d\n", list_size(&t->SPT), t->tid);
   bool not_present;  /* True: not-present page, false: writing r/o page. */
   bool write;        /* True: access was write, false: access was read. */
   bool user;         /* True: access by user, false: access by kernel. */
@@ -193,7 +193,7 @@ printf("\n\n\n\n\n\n\n\nPAGE FAULT START list_size = %d , tid = %d\n", list_size
      be assured of reading CR2 before it changed). */
   intr_enable ();
 
-printf("fault_addr=%p\n",fault_addr);
+//printf("fault_addr=%p\n",fault_addr);
  
 
 /* Count page faults. */
@@ -206,27 +206,30 @@ printf("fault_addr=%p\n",fault_addr);
 
 
 t = thread_current();
-	printf("lock acquire START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+//	printf("lock acquire START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
 	lock_acquire(&F_lock);
-	printf("lock acquire END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
+//	printf("lock acquire END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
 
 
 
 //stack growth
-if(fault_addr<PHYS_BASE && ((fault_addr==f->esp+32)|| (fault_addr == f->esp +4)))
+if(fault_addr<PHYS_BASE && ((fault_addr==f->esp-32)|| (fault_addr == f->esp -4)))
 {
 	setup_page(f,fault_addr);
 	lock_release(&F_lock);
-	printf("stack growth : %p\n",f->esp);
-	printf("%08x\n",*((int *)f->esp));
+//	printf("stack growth : %p\n",f->esp);
+//	printf("%08x\n",*((int *)f->esp));
 	return ;
 }
+//else
+//printf("fault_addr<PHYS_BASE=%d && ((fault_addr==f->esp+32)=%d || (fault_addr == f->esp +4)=%d\n)",fault_addr<PHYS_BASE,fault_addr==f->esp+32, fault_addr == f->esp +4);
 
-
+//printf("differ = %d\n",fault_addr-f->esp);
+//
 
 uint8_t *VMP=pg_round_down(fault_addr);
-printf("VVVVVVMP =%p\n",VMP);
-printf("FAULT_ADD =%p\n",fault_addr);
+//printf("VVVVVVMP =%p\n",VMP);
+//printf("FAULT_ADD =%p\n",fault_addr);
 
 /*
 struct list_elem *e;
@@ -239,14 +242,14 @@ struct list_elem *e;
 */
 //page_swaped
 struct SPTE * spte = find_SPT(t, VMP);
-printf("spte = %p \n", spte);
-if(spte)
+//printf("spte = %p \n", spte);
+if(spte &&spte->status==1)
 {
-	printf("before evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
+	//printf("before evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
 	uint8_t *PMP = F_alloc(VMP, PAL_USER | PAL_ZERO);
 	struct list_elem *e = (spte->SWTE_elem);
 	struct SWTE * swte = list_entry(e, struct SWTE, SWTE_elem);
-	printf("evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
+	//printf("evict list_size=%d tid=%d\n", list_size(&FT), t->tid);
 /*
       for (e = list_begin (&SWT); e != list_end (&SWT);
            e = list_next (e))
@@ -279,7 +282,7 @@ if(spte)
 	struct FTE * fte = list_back(&FT);
 	//update SPT
 	
-	printf("2\n");
+//	printf("2\n");
 	spte->status=0;
 	spte->FTE_elem = &fte->FTE_elem;
 	spte->SWTE_elem =NULL;
@@ -293,12 +296,12 @@ for (e = list_begin (&t->SPT); e != list_end (&t->SPT);
           printf(" [elem = %p, status = %d] --", temp->VMP, temp->status);
         }
 */	
-	printf("3\n");
+//	printf("3\n");
 	
-	printf("lock release start tid = %d\n", t->tid);
+//	printf("lock release start tid = %d\n", t->tid);
 	lock_release(&F_lock);
 
-	printf("lock release end tid = %d\n\n\n\n", t->tid);
+//	printf("lock release end tid = %d\n\n\n\n", t->tid);
 
 //printf("PAGE FAULT END list_size = %d \n", list_size(&FT));
 	return ;
@@ -313,17 +316,17 @@ if(fault_addr<PHYS_BASE && (fault_addr>=f->esp))
 	//printf("%08x\n",*((int *)f->esp));
 	return ;
 }
-
 	
-	printf("lock release last start tid = %d\n", t->tid);
+//	printf("lock release last start tid = %d\n", t->tid);
 	lock_release(&F_lock);
-	printf("lock release last end tid = %d\n\n\n\n", t->tid);
+//	printf("lock release last end tid = %d\n\n\n\n", t->tid);
+
 
 
 /* When a page fault occurs, the process should terminate.  */
 if(not_present || write || user)
 {
-	printf("not_present = %d, write =%d, user=%d, fault addr=%p tid = %d\n", not_present, write, user, fault_addr, t->tid);
+//	printf("not_present = %d, write =%d, user=%d, fault addr=%p tid = %d\n", not_present, write, user, fault_addr, t->tid);
 	//printf("123");
 	sys_exit(-1);
 

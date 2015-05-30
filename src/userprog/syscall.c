@@ -11,7 +11,9 @@
 #include "threads/init.h"
 #include "devices/input.h"
 #include "userprog/pagedir.h"
-
+#include "vm/FT.h"
+#include "vm/SPT.h"
+#include "vm/Swap.h"
 
 static void syscall_handler (struct intr_frame *);
 struct thread * curr;
@@ -256,6 +258,43 @@ syscall_handler (struct intr_frame *f UNUSED)
 	case SYS_HALT:
 		power_off();
 		break;
+
+	/*void mmap */
+    	case SYS_MMAP:
+		isUseraddr(f->esp,2,0);
+		fd = *(int*)(f->esp+4);
+		position = *(unsigned*)(f->esp+8);
+		file = fd2file(fd);
+		int length = filesize(fd);
+		int pages;
+
+		if(file==NULL|| position==0 || position%PGSIZE!=0)
+		{
+			f->eax=-1;
+			break;
+		}
+			
+		
+		if(length/PGSIZE==0)
+		pages = length/PGSIZE;
+		else
+		pages = length/PGSIZE+1;
+		
+		int temp_pages=pages;
+		struct SPTE *spte;	
+		while(temp_pages>0)
+		{
+
+		 spte = find_SPT(curr, position);
+			if(spte!=NULL)
+			{
+				f->eax=-1;
+				break;
+			}
+			temp_pages--;
+		}
+
+	break;
 
    }
 }

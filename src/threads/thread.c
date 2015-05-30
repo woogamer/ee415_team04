@@ -229,7 +229,6 @@ thread_create (const char *name, int priority,
 
   //initialize Supplemental page table
   init_SPT(t);
-  printf("thread create tid = %d\n", t->tid);
 
   /* Add to run queue. */
   thread_unblock (t);

@@ -159,7 +159,7 @@ struct SWTE * disk_find(struct thread *t, uint8_t *VMP)
 
 void delete_SWT()
 {
-int count=0;
+//int count=0;
 	struct thread * t= thread_current();
 	struct list_elem *e;
 //printf("SWT start\n");

@@ -223,13 +223,13 @@ process_exit (void)
   uint32_t *pd;
 
 
-  printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
+  //printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
   if(!lock_held_by_current_thread(&F_lock))  
   {
-	printf("flock gogo\n");
+//	printf("flock gogo\n");
 	lock_acquire(&F_lock);
   }
-  printf("222222");
+  //printf("222222");
 /*
   printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzsys EXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
   if(!lock_held_by_current_thread(&sys_lock))  
@@ -241,15 +241,15 @@ process_exit (void)
 */
 
   delete_FT();
-printf("delete_FT\n");
+//printf("delete_FT\n");
   delete_SWT();
 
-printf("Delete_SWT\n");
+//printf("Delete_SWT\n");
   delete_SPT();
 
-  printf("DELETE_SPT\n");
+  //printf("DELETE_SPT\n");
   lock_release(&F_lock);
-  printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d\n\n\n",curr->tid);
+  //printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d\n\n\n",curr->tid);
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
   pd = curr->pagedir;
@@ -389,7 +389,7 @@ load (char *file_name, void (**eip) (void), void **esp)
   temp[15]='\0';	  
 
 
-  printf("************************ file open tid=%d\n",t->tid);
+  //printf("************************ file open tid=%d\n",t->tid);
   /* Open executable file. */
   file = filesys_open (temp);
   if (file == NULL) 
@@ -417,12 +417,10 @@ load (char *file_name, void (**eip) (void), void **esp)
   for (i = 0; i < ehdr.e_phnum; i++) 
     {
       struct Elf32_Phdr phdr;
-printf("1");
       if (file_ofs < 0 || file_ofs > file_length (file))
         goto done;
       file_seek (file, file_ofs);
 
-printf("2");
       if (file_read (file, &phdr, sizeof phdr) != sizeof phdr)
         goto done;
       file_ofs += sizeof phdr;
@@ -443,7 +441,6 @@ printf("2");
           if (validate_segment (&phdr, file)) 
             {
 
-printf("3");
               bool writable = (phdr.p_flags & PF_W) != 0;
               uint32_t file_page = phdr.p_offset & ~PGMASK;
               uint32_t mem_page = phdr.p_vaddr & ~PGMASK;
@@ -457,7 +454,6 @@ printf("3");
                   zero_bytes = (ROUND_UP (page_offset + phdr.p_memsz, PGSIZE)
                                 - read_bytes);
 
-printf("4");
                 }
               else 
                 {
@@ -466,10 +462,8 @@ printf("4");
                   read_bytes = 0;
                   zero_bytes = ROUND_UP (page_offset + phdr.p_memsz, PGSIZE);
 
-printf("5");
                 }
 
-printf("6\n");
               if (!load_segment (file, file_page, (void *) mem_page,
                                  read_bytes, zero_bytes, writable))
                 goto done;
@@ -480,12 +474,11 @@ printf("6\n");
         }
     }
 
-  printf("************************ setup stack start tid=%d\n",t->tid);
   /* Set up stack. */
   if (!setup_stack (esp))
     goto done;
 
-  printf("************************ setup stack end tid=%d\n",t->tid);
+  //printf("************************ setup stack end tid=%d\n",t->tid);
   /* After stack setup make argument passing*/
 
   /* --------------- parsing argument --------------*/
@@ -675,7 +668,7 @@ load_segment (struct file *file, off_t ofs, uint8_t *upage,
   ASSERT (pg_ofs (upage) == 0);
   ASSERT (ofs % PGSIZE == 0);
 
-printf("7");
+//printf("7");
   file_seek (file, ofs);
   while (read_bytes > 0 || zero_bytes > 0) 
     {
@@ -690,42 +683,42 @@ printf("7");
      
 
 	struct thread *	t = thread_current();
-	if(F_lock.holder!=NULL)
-	printf("load segment F_lock  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
-	else
-	printf("holder is acquire START NULL\n\n\n\n\n");
+//	if(F_lock.holder!=NULL)
+//	printf("load segment F_lock  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+//	else
+//	printf("holder is acquire START NULL\n\n\n\n\n");
 	lock_acquire(&F_lock);
 
 
-	if(F_lock.holder!=NULL)
-	printf("load segment F_lock END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
-	else
-	printf("holder is acuire END NULL\n\n\n\n\n");
+//	if(F_lock.holder!=NULL)
+//	printf("load segment F_lock END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
+//	else
+//	printf("holder is acuire END NULL\n\n\n\n\n");
 	
 
 
      // printf("load segment F_lock START curr =%d holder=%d\n", thread_current()->tid, F_lock.holder->tid);
       //lock_acquire(&F_lock);
       //printf("load segment F_lock END curr =%d holder=%d\n", thread_current()->tid, F_lock.holder->tid);
-printf("8");
+//printf("8");
       uint8_t *kpage = F_alloc (upage, PAL_USER);
 
-printf("9");
+//printf("9");
 	
-	if(F_lock.holder!=NULL)
-	printf("load segment release  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
-	else
-	printf("holder is release Start  NULL\n\n\n\n\n");
+	//if(F_lock.holder!=NULL)
+	//printf("load segment release  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+	//else
+	//printf("holder is release Start  NULL\n\n\n\n\n");
 	
 	lock_release(&F_lock);
 
-	if(F_lock.holder!=NULL)
-	printf("load segment release END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
-	else
-	printf("holder is release END NULL\n\n\n\n\n");
+	//if(F_lock.holder!=NULL)
+	//printf("load segment release END tid = %d lock tid = %d\n", t->tid, F_lock.holder->tid);
+	//else
+	//printf("holder is release END NULL\n\n\n\n\n");
 	
 
-printf("aaa");
+//printf("aaa");
       if (kpage == NULL)
 	{
 	
@@ -772,11 +765,11 @@ setup_stack (void **esp)
   //printf("page fault setup_stack\n");
   
   struct thread * t = thread_current();
-  if(F_lock.holder!=NULL)
-  printf("setup stack aquire  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+  //if(F_lock.holder!=NULL)
+  //printf("setup stack aquire  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
   lock_acquire(&F_lock);
-  if(F_lock.holder!=NULL)
-  printf("setup stack aquire  END tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+  //if(F_lock.holder!=NULL)
+  //printf("setup stack aquire  END tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
  
   kpage=F_alloc(((uint8_t *) PHYS_BASE) - PGSIZE, PAL_USER | PAL_ZERO);
 
@@ -790,11 +783,11 @@ setup_stack (void **esp)
         palloc_free_page (kpage);
     }
 
-  if(F_lock.holder!=NULL)
-  printf("setup stack release  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+  //if(F_lock.holder!=NULL)
+  //printf("setup stack release  START tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
   lock_release(&F_lock);
-  if(F_lock.holder!=NULL)
-  printf("setup stack release  END tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
+  //if(F_lock.holder!=NULL)
+  //printf("setup stack release  END tid = %d lock tid =%d\n", t->tid, F_lock.holder->tid);
  
 
   return success;
@@ -863,8 +856,8 @@ void sys_exit(int status){
 		}
 	}
 
-	printf("%s(%d): exit(%d)\n",  curr->name,curr->tid, status);
-	//printf("%s: exit(%d)\n",  curr->name, status);
+	//printf("%s(%d): exit(%d)\n",  curr->name,curr->tid, status);
+	printf("%s: exit(%d)\n",  curr->name, status);
 	
 	intr_set_level (old_level);
 
