@@ -305,6 +305,21 @@ for (e = list_begin (&t->SPT); e != list_end (&t->SPT);
 
 //printf("PAGE FAULT END list_size = %d \n", list_size(&FT));
 	return ;
+}else if(spte &&spte->status==2){
+
+	struct thread * curr = thread_current();	
+
+	uint8_t * PMP = F_alloc(spte->VMP, PAL_USER | PAL_ZERO);
+	pagedir_set_page(curr->pagedir, spte->VMP, PMP, true);
+	
+	file_seek(spte->file, spte->offset);
+	file_read(spte->file, PMP, spte->endaddr - spte->VMP);
+	
+
+	spte->status = 3;
+	lock_release(&F_lock);
+
+	return;
 }
 
 

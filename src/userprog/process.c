@@ -20,7 +20,9 @@
 #include "threads/synch.h"
 #include "threads/malloc.h"
 #include "vm/FT.h"
+#include "vm/SPT.h"
 #include "userprog/syscall.h"
+#include <syscall.h>
 
 static thread_func start_process NO_RETURN;
 static bool load (char *cmdline, void (**eip) (void), void **esp);
@@ -224,11 +226,6 @@ process_exit (void)
 
 
   //printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzEXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
-  if(!lock_held_by_current_thread(&F_lock))  
-  {
-//	printf("flock gogo\n");
-	lock_acquire(&F_lock);
-  }
   //printf("222222");
 /*
   printf("\n\n\nzzzzzzzzzzzzzzzzzzzzzzzzsys EXIT tid=%d holder=%d\n",curr->tid, F_lock.holder->tid);
@@ -239,6 +236,27 @@ process_exit (void)
   }
   printf("333333");
 */
+
+  struct list_elem *e;
+  for(e = list_begin(&curr->MMT); e != list_end(&curr->MMT); ) {
+	struct MMTE *m = list_entry(e, struct MMTE, MMTE_elem); 
+
+	munmap_clear(m);
+	e = list_remove(e);
+
+	lock_acquire(&sys_lock);
+	file_close(m->file);
+	lock_release(&sys_lock);
+
+	free(m);
+  }
+
+  if(!lock_held_by_current_thread(&F_lock))  
+  {
+//	printf("flock gogo\n");
+	lock_acquire(&F_lock);
+  }
+
 
   delete_FT();
 //printf("delete_FT\n");
@@ -394,7 +412,8 @@ load (char *file_name, void (**eip) (void), void **esp)
   file = filesys_open (temp);
   if (file == NULL) 
     {
-      printf ("load: %s: open failed\n", file_name);
+      if(file_name[0] != '\0')
+          printf ("load: %s: open failed\n", file_name);
       goto done; 
     }
   /* Read and verify executable header. */
@@ -857,7 +876,8 @@ void sys_exit(int status){
 	}
 
 	//printf("%s(%d): exit(%d)\n",  curr->name,curr->tid, status);
-	printf("%s: exit(%d)\n",  curr->name, status);
+	if(curr->name[0] !='\0')
+		printf("%s: exit(%d)\n",  curr->name, status);
 	
 	intr_set_level (old_level);
 

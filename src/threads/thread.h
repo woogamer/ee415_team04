@@ -109,7 +109,8 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     struct list SPT;			/* Supplement Table*/
 
-
+    struct list MMT;			/*mmap Table*/
+    int mmap_id;			/*remember next mmap id*/
 
     struct list_elem child_elem;		/* Fof child_list*/
 

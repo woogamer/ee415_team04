@@ -229,7 +229,10 @@ thread_create (const char *name, int priority,
 
   //initialize Supplemental page table
   init_SPT(t);
-
+  //initialize mmap Table
+  list_init(&t->MMT);
+  //initialize mmap id
+  t->mmap_id=0;
   /* Add to run queue. */
   thread_unblock (t);
 

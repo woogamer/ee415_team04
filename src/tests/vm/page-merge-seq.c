@@ -48,22 +48,27 @@ sort_chunks (void)
 
       msg ("sort chunk %zu", i);
 
+      //printf("TEST1\n");
+
       /* Write this chunk to a file. */
       quiet = true;
       CHECK ((handle = open ("buffer")) > 1, "open \"buffer\"");
       write (handle, buf1 + CHUNK_SIZE * i, CHUNK_SIZE);
       close (handle);
 
+      //printf("TEST2\n");
       /* Sort with subprocess. */
       CHECK ((child = exec ("child-sort buffer")) != -1,
              "exec \"child-sort buffer\"");
       CHECK (wait (child) == 123, "wait for child-sort");
 
+      //printf("TEST3\n");
       /* Read chunk back from file. */
       CHECK ((handle = open ("buffer")) > 1, "open \"buffer\"");
       read (handle, buf1 + CHUNK_SIZE * i, CHUNK_SIZE);
       close (handle);
 
+      //printf("TEST4\n");
       quiet = false;
     }
 }

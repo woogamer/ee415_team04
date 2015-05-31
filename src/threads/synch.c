@@ -216,6 +216,8 @@ lock_init (struct lock *lock)
 void
 lock_acquire (struct lock *lock)
 {
+struct thread * curr=thread_current();
+//printf("lock acquire start curr: %s, holder: %s\n", curr->name, lock->holder->name);
   ASSERT (lock != NULL);
   ASSERT (!intr_context ());
   ASSERT (!lock_held_by_current_thread (lock));
@@ -225,16 +227,20 @@ lock_acquire (struct lock *lock)
 	  /* When the running thread's priority is higher than holder's priority, */
 	  if(thread_get_priority() > get_priority(lock->holder)){
 		enum intr_level old_level;
-		
+
 		old_level = intr_disable ();
 		/* then keep elem2 of the trier in donate_list of holder.  */
 		list_push_back(&lock->holder->donate_list, &thread_current()->elem2);
 		intr_set_level (old_level);
 	  }
-  }
+  }//else{
 
-  sema_down (&lock->semaphore);
-  lock->holder = thread_current ();
+//printf("lock acquire mid curr: %s, holder: %s\n", curr->name, lock->holder->name);
+	  sema_down (&lock->semaphore);
+	  lock->holder = thread_current ();
+
+//printf("lock acquire end curr: %s, holder: %s\n", curr->name, lock->holder->name);
+  //}
 }
 
 /* Tries to acquires LOCK and returns true if successful or false
@@ -266,6 +272,9 @@ lock_try_acquire (struct lock *lock)
 void
 lock_release (struct lock *lock) 
 {
+
+struct thread * curr=thread_current();
+//printf("lock release start curr: %s, holder: %s\n", curr->name, lock->holder->name);
   ASSERT (lock != NULL);
   ASSERT (lock_held_by_current_thread (lock));
 
@@ -285,7 +294,11 @@ lock_release (struct lock *lock)
   }
 
   lock->holder = NULL;
+
+//printf("lock release mid curr: %s, holder: %s\n", curr->name, lock->holder->name);
   sema_up (&lock->semaphore);
+
+//printf("lock release end curr: %s, holder: %s\n", curr->name, lock->holder->name);
 }
 
 /* Returns true if the current thread holds LOCK, false
