@@ -4,6 +4,7 @@
 #include "userprog/pagedir.h"
 #include "threads/malloc.h"
 #include <stdio.h>
+#include "filesys/file.h"
 #include "threads/vaddr.h"
 
 void init_SPT(struct thread * t)
@@ -73,4 +74,21 @@ void delete_SPT(void)
 
 	ASSERT(0==list_size(&t->SPT));
 	
+}
+
+void delete_SPTE(struct SPTE * spte){
+	//if(is_interior(&spte->SPTE_elem))
+		list_remove(&spte->SPTE_elem);
+	free(spte);
+}
+
+void mmap_writeback(struct SPTE *spte){
+	struct thread *curr = thread_current();
+	spte->status = 2;
+
+	if(pagedir_is_dirty (curr->pagedir, spte->VMP)){
+		file_seek(spte->file, spte->offset);
+		file_write(spte->file, spte->VMP, spte->endaddr - spte->VMP);
+	}
+
 }

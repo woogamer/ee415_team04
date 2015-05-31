@@ -21,7 +21,7 @@ uint8_t * F_alloc(uint8_t * VMP, enum palloc_flags flag)
 	//0x5a5a5000
 	ASSERT(pg_round_down(VMP)!=0x5a5a5000);
 	//printf("VMP = %x\n ",VMP );
-	struct thread * t = thread_current();
+	//struct thread * t = thread_current();
 	uint8_t * PMP =palloc_get_page(flag);
 	//printf("F_alloc  tid =%d F_size=%d\n", t->tid, list_size(&FT));	
 
